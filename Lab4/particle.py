@@ -1,6 +1,6 @@
 import sys
 
-f = open(sys.argv[1], "r")
-contents = f.read()
-
-f.close()
+with open(sys.argv[1], 'r') as f:
+	for line in f:
+		for num in line.split():
+			print num
