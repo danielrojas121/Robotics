@@ -38,6 +38,7 @@ def drawWorld(x, y):
 	penup()
 
 def drawObstable(x, y):
+	begin_fill()
 	penup()
 	setposition(x - 5.7, y - 5.7)
 	pendown()
@@ -51,5 +52,6 @@ def drawObstable(x, y):
 	#turn left to again be in horizontal X axis
 	left(90)
 	penup()
+	end_fill()
 
 main()
