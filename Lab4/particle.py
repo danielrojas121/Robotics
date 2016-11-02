@@ -35,6 +35,12 @@ def drawInitialObjects():
 		i = random.randint(0, world_x)
 		j = random.randint(0, world_y)
 		theta = random.randint(0, 359)
+		for x in range(0, len(object_list)):
+			obstacle = object_list[x]
+			while (obstacle[0] < i) AND (i < obstacle[0] + 11.4) AND (obstacle[1] < j) AND (j < obstacle[1] + 11.4):
+				i = random.randint(0, world_x)
+				j = random.randint(0, world_y)
+
 		#iterate through obstacles to make sure particle position ok
 		#if ok, add to particle list here (remove from draw particle)
 		#if p%10==0 draw particle
