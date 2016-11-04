@@ -20,37 +20,38 @@ def main():
 		drawInitialObjects()
 	else:
 		print "Error: Incorrect command line arguments"
-		print "Format: python particle.py <coordinates_filename> <particle_count>"
+		print "Format: python locate.py <coordinates_filename> <particle_count>"
 		sys.exit(1)
 
 def drawInitialObjects():
-	global object_list, particle_count, matrix
+	global object_list, particle_count, particle_list, matrix
 	filename = sys.argv[1]
 	with open(filename, 'r') as f:
 		world_x, world_y = [int(x) for x in next(f).split()]
-		matrix = np.empty(shape=(world_y, world_x))
+		matrix = np.empty(shape=(world_x, world_y))
 		matrix.fill(-1) #-1 for any 'empty' space
 		drawWorld(world_x, world_y)
 		for line in f:
 			x, y = [float(x) for x in line.split()]
 			drawObstacle(x, y)
 	particle_count = int(sys.argv[2])
+	#iterate to place particles
 	for p in range(0, particle_count):
-		i = random.randint(0, world_x)
-		j = random.randint(0, world_y)
+		i = random.randint(1, world_x - 1)
+		j = random.randint(1, world_y - 1)
 		theta = random.randint(0, 359)
-		'''for x in range(0, len(object_list)):
-			obstacle = object_list[x]
-			if (obstacle[0] < i) AND (i < obstacle[0] + 11.4) AND (obstacle[1] < j) AND (j < obstacle[1] + 11.4):
-				i = random.randint(0, world_x)
-				j = random.randint(0, world_y)
-'''
-		#iterate through obstacles to make sure particle position ok
-		#if ok, add to particle list here (remove from draw particle)
-		#if p%10==0 draw particle
-	#mark matrix with each particle
-	matrix[0,0] = 1
-	drawParticle(0,0,0)
+		while matrix[i, j] != -1:
+			#generate new coordinates if there exists a particle or obstacle
+			i = random.randint(1, world_x - 1)
+			j = random.randint(1, world_y - 1)
+		#mark matrix with each particle
+		matrix[i, j] = 1
+		#add particle to particle_list
+		particle = [i, j, theta]
+		particle_list.append(particle)
+		#draw every 10 particles
+		if p % 10 == 0:
+			drawParticle(i, j, theta)
 	print matrix
 	print object_list
 	print particle_list
@@ -101,12 +102,9 @@ def drawObstacle(x, y):
 	end_fill()
 
 def drawParticle(x, y, theta):
-	global particle_list
 	color('blue')
 	begin_fill()
 	penup()
-	particle = [x, y, theta] #move this and...
-	particle_list.append(particle) #move this outside to include ALL particles
 	setposition(offsetx + scale*x, offsety + scale*y)
 	pendown()
 	circle(1)
