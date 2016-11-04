@@ -11,16 +11,16 @@ scale = 3
 offsetx = -scale/2 * 150
 offsety = -scale/2 * 150
 particle_count = 0
-object_list = []
-particle_list = []
+object_list = [] #store position of map objects in this list
+particle_list = [] #store Particle instances in this list
 matrix = None
 world_x = 0
 world_y = 0
+BUFFER = 1 #maintain particles a certain distance from objects
 
 def main():
 	if len(sys.argv) == 3:
 		drawInitialObjects()
-		drawParticles()
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -32,8 +32,8 @@ def drawInitialObjects():
 	filename = sys.argv[1]
 	with open(filename, 'r') as f:
 		world_x, world_y = [int(x) for x in next(f).split()]
-		#matrix = np.empty(shape=(world_x, world_y))
-		#matrix.fill(-1) #-1 for any 'empty' space
+		matrix = np.empty(shape=(world_x, world_y))
+		matrix.fill(-1) #-1 for any 'empty' space
 		drawWorld(world_x, world_y)
 		for line in f:
 			x, y = [float(x) for x in line.split()]
@@ -45,19 +45,20 @@ def drawParticles():
 	clearstamps()
 	particle_count = int(sys.argv[2])
 	for p in range(0, particle_count):
-		i = random.random() * (world_x - 3)
-		j = random.random() * (world_y - 3)
+		i = random.random() * world_x
+		j = random.random() * world_y
 		theta = random.randint(0, 359)
 		restart = True
 		while restart:
 			restart = False
 			for x in range(0, len(object_list)):
 				obstacle = object_list[x]
-				if (obstacle[0] < i) and (i < obstacle[0] + 11.4) and (obstacle[1] < j) and (j < obstacle[1] + 11.4):
-					i = random.random() * world_x
-					j = random.random() * world_y
-					restart = True
-					break
+				if (obstacle[0] - BUFFER < i) and (i < obstacle[0] + 11.4 + BUFFER):
+					if (obstacle[1] - BUFFER < j) and (j < obstacle[1] + 11.4 + BUFFER):
+						i = random.random() * world_x
+						j = random.random() * world_y
+						restart = True
+						break
 		#mark matrix with each particle
 		#matrix[i, j] = 1
 		#add particle to particle_list
