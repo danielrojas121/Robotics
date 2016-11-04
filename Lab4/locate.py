@@ -14,48 +14,61 @@ particle_count = 0
 object_list = []
 particle_list = []
 matrix = None
+world_x = 0
+world_y = 0
 
 def main():
 	if len(sys.argv) == 3:
 		drawInitialObjects()
+		drawParticles()
+		done()
 	else:
 		print "Error: Incorrect command line arguments"
 		print "Format: python locate.py <coordinates_filename> <particle_count>"
 		sys.exit(1)
 
 def drawInitialObjects():
-	global object_list, particle_count, particle_list, matrix
+	global object_list, particle_count, particle_list, matrix, world_x, world_y
 	filename = sys.argv[1]
 	with open(filename, 'r') as f:
 		world_x, world_y = [int(x) for x in next(f).split()]
-		matrix = np.empty(shape=(world_x, world_y))
-		matrix.fill(-1) #-1 for any 'empty' space
+		#matrix = np.empty(shape=(world_x, world_y))
+		#matrix.fill(-1) #-1 for any 'empty' space
 		drawWorld(world_x, world_y)
 		for line in f:
 			x, y = [float(x) for x in line.split()]
 			drawObstacle(x, y)
+	drawParticles()
+
+def drawParticles():
+	global world_x, world_y
+	clearstamps()
 	particle_count = int(sys.argv[2])
-	#iterate to place particles
 	for p in range(0, particle_count):
-		i = random.randint(1, world_x - 1)
-		j = random.randint(1, world_y - 1)
+		i = random.random() * (world_x - 3)
+		j = random.random() * (world_y - 3)
 		theta = random.randint(0, 359)
-		while matrix[i, j] != -1:
-			#generate new coordinates if there exists a particle or obstacle
-			i = random.randint(1, world_x - 1)
-			j = random.randint(1, world_y - 1)
+		restart = True
+		while restart:
+			restart = False
+			for x in range(0, len(object_list)):
+				obstacle = object_list[x]
+				if (obstacle[0] < i) and (i < obstacle[0] + 11.4) and (obstacle[1] < j) and (j < obstacle[1] + 11.4):
+					i = random.random() * world_x
+					j = random.random() * world_y
+					restart = True
+					break
 		#mark matrix with each particle
-		matrix[i, j] = 1
+		#matrix[i, j] = 1
 		#add particle to particle_list
 		particle = [i, j, theta]
 		particle_list.append(particle)
 		#draw every 10 particles
 		if p % 10 == 0:
-			drawParticle(i, j, theta)
-	print matrix
+			stampParticle(i, j, theta)
+	#print matrix
 	print object_list
 	print particle_list
-	done()
 
 def drawWorld(x, y):
 	penup()
@@ -101,14 +114,13 @@ def drawObstacle(x, y):
 	penup()
 	end_fill()
 
-def drawParticle(x, y, theta):
+def stampParticle(x, y, theta):
 	color('blue')
-	begin_fill()
-	penup()
+	shape('circle')
+	resizemode('user')
+	turtlesize(.07,.07,.1)
+	setheading(theta)
 	setposition(offsetx + scale*x, offsety + scale*y)
-	pendown()
-	circle(1)
-	penup()
-	end_fill()
+	stamp()
 
 main()
