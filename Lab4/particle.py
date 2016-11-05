@@ -23,6 +23,6 @@ class Particle(object):
 
         self.position_matrix = np.dot(self.translation_matrix, self.position_matrix)
 
-        x = self.position_matrix[0,2]
-        y = self.position_matrix[1,2]
-        return (x, y, self.theta)
+        self.x = self.position_matrix[0,2]
+        self.y = self.position_matrix[1,2]
+        return (self.x, self.y, self.theta)
