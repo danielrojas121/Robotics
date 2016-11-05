@@ -17,19 +17,21 @@ object_list = [] #store position of map objects in this list
 particle_list = [] #store Particle instances in this list
 world_x = 0
 world_y = 0
+robot = None
 BUFFER = 1 #maintain particles a certain distance from objects
 
 def main():
 	if len(sys.argv) == 3:
-		drawInitialObjects()
-		drawParticles()
+		createInitialObjects()
+		createInitialParticles()
+		createInitialRobot()
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
 		print "Format: python locate.py <coordinates_filename> <particle_count>"
 		sys.exit(1)
 
-def drawInitialObjects():
+def createInitialObjects():
 	global object_list, particle_count, particle_list, world_x, world_y
 	filename = sys.argv[1]
 	with open(filename, 'r') as f:
@@ -39,8 +41,7 @@ def drawInitialObjects():
 			x, y = [float(x) for x in line.split()]
 			drawObstacle(x, y)
 
-def drawParticles():
-	global world_x, world_y
+def createInitialParticles():
 	clearstamps()
 	particle_count = int(sys.argv[2])
 	for p in range(0, particle_count):
@@ -55,7 +56,9 @@ def drawParticles():
 		#draw every 10 particles
 		if p % 10 == 0:
 			stampParticle(i, j, theta)
-	
+
+def createInitialRobot():
+	global robot
 	positionTuple = findRandomPosition()
 	i = positionTuple[0]
 	j = positionTuple[1]
