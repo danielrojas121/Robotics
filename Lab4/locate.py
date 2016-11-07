@@ -23,28 +23,29 @@ BUFFER = 1 #maintain particles a certain distance from objects
 
 def main():
 	global particle_list
+	
 	if len(sys.argv) == 3:
 		createInitialObjects()
-		createInitialParticles()
 		createInitialRobot()
+		createInitialParticles()
 	else:
 		print "Error: Incorrect command line arguments"
 		print "Format: python locate.py <coordinates_filename> <particle_count>"
 		sys.exit(1)
+	
 	for move in range(MOVES):
 		robot.move(5, 0)
 
 		p2 = []
 
 		for i in range(particle_count):
-			particle_list[i].move(5, 0)
-			p2.append(particle_list[i])
+			p2.append(particle_list[i].move(5,0))
 
 		particle_list = p2
 	done()
 
 def createInitialObjects():
-	global world_x, world_y
+	global world_x, world_y, object_list
 	filename = sys.argv[1]
 	with open(filename, 'r') as f:
 		world_x, world_y = [int(x) for x in next(f).split()]
@@ -56,6 +57,10 @@ def createInitialObjects():
 			else:
 				print "Obstacle at %d, %d is outside the world bounds" % (x,y)
 				sys.exit(1)
+	#Initialize Particle class static variables
+	Particle.world_x = world_x
+	Particle.world_y = world_y
+	Particle.object_list = object_list
 
 def createInitialParticles():
 	global particle_count
