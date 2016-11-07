@@ -3,8 +3,6 @@ import numpy as np
 import math
 
 class Particle(object):
-	position_matrix = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
-	translation_matrix = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
 	
 	def __init__(self, x, y, theta, weight):
 		self.x = x
@@ -12,8 +10,8 @@ class Particle(object):
 		self.theta = theta
 		self.weight = weight
 		#initialize coordinates in matrix
-		self.position_matrix[0,2] = x
-		self.position_matrix[1,2] = y
+		self.position_matrix = np.matrix([[1.0,0.0,x],[0.0,1.0,y],[0.0,0.0,1.0]])
+		self.translation_matrix = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
 
 	def move(self, dist, theta_diff):
 		self.theta += theta_diff

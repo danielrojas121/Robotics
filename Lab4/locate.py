@@ -37,10 +37,8 @@ def main():
 		p2 = []
 
 		for i in range(particle_count):
-			print "particle %d position_0: %d, %d" % (i, particle_list[i].x, particle_list[i].y)
 			particle_list[i].move(5, 0)
 			p2.append(particle_list[i])
-			print "particle %d position_1: %d, %d" % (i, particle_list[i].x, particle_list[i].y)
 
 		particle_list = p2
 	done()
