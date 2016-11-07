@@ -42,6 +42,8 @@ def main():
 			p2.append(particle_list[i].move(5,0))
 
 		particle_list = p2
+	x = particle_list[0].sense()
+	print x
 	done()
 
 def createInitialObjects():
