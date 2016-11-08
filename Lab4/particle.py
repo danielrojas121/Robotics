@@ -57,7 +57,7 @@ class Particle(object):
 
 		for i in range(len(self.object_list)):
 			dist = math.sqrt((self.x - self.object_list[i][0])**2 + (self.y - self.object_list[i][1])**2)
-			#prob *= self.Gaussian(dist, self.sense_noise, measurement[i])
+			prob *= self.Gaussian(dist, self.sense_noise, measurement[i])
 
 		return prob
 

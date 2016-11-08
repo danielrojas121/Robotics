@@ -2,6 +2,7 @@ import sys
 import random
 import numpy as np
 import math
+import time
 from turtle import *
 from particle import Particle
 from robot import Robot
@@ -18,11 +19,13 @@ world_y = 0
 object_list = [] #store position of map objects in this list
 particle_list = [] #store Particle instances in this list
 robot = None
-MOVES = 100
+robotGuess = None
+updates = 0
+MOVES = 10
 BUFFER = 1 #maintain particles a certain distance from objects
 
 def main():
-	global particle_list
+	global particle_list, robotGuess, updates
 	
 	if len(sys.argv) == 3:
 		createInitialObjects()
@@ -34,11 +37,12 @@ def main():
 		print "Format: python locate.py <coordinates_filename> <particle_count>"
 		sys.exit(1)
 	
-	print "Mean error at start", eval(robot, particle_list)
+	print "Mean error at start", meanError(robot, particle_list)
 	#print particle_list
 
 	for move in range(MOVES):
 		robot.move(5, 0)
+		updates += 1
 		dist_list = robot.sense()
 
 		p2 = []
@@ -63,13 +67,20 @@ def main():
 			p3.append(particle_list[index])
 
 		particle_list = p3
+		robotGuess = meanLocation(particle_list)
+		updates += 1
 
-		print "Mean error", eval(robot, particle_list)
+		if move % 5 == 0:
+			stampAll()
+
+	print "Total updates:", updates
+	print "Mean location", meanLocation(particle_list)
+	print "Mean error", meanError(robot, particle_list)
 
 	stampAll()
 
 	print ' '
-	if eval(robot, particle_list) > 0.0:
+	if meanError(robot, particle_list) > 0.0:
 		for i in range(particle_count/100):
 			print 'Final particle #', i*100, particle_list[i*100]
 		print ' '
@@ -96,7 +107,7 @@ def createInitialObjects():
 	Particle.object_list = object_list
 
 def createInitialParticles():
-	global particle_count
+	global particle_count, robotGuess
 	particle_count = int(sys.argv[2])
 	for p in range(0, particle_count):
 		positionTuple = findRandomPosition()
@@ -108,6 +119,7 @@ def createInitialParticles():
 		particle = Particle(i, j, theta, 0)
 		particle.set_noise(0.05, 0.05, 5.0)
 		particle_list.append(particle)
+	robotGuess = meanLocation(particle_list)
 
 def createInitialRobot():
 	global robot
@@ -175,16 +187,21 @@ def drawObstacle(x, y):
 	end_fill()
 
 def stampAll():
-	global robot, particle_list
+	global robot, particle_list, robotGuess
 	clearstamps()
-	stampRobot(robot.x, robot.y, robot.theta)
+	stampRobot(robot, 'red')
 	for i in range(0, len(particle_list)):
 		p = particle_list[i]
 		#draw every 10 particles
 		if i % 10 == 0:
-			stampParticle(p.x, p.y, p.theta)
+			stampParticle(p)
+	stampRobot(robotGuess, 'gray')
+	time.sleep(1)
 
-def stampParticle(x, y, theta):
+def stampParticle(particle):
+	x = particle.x
+	y = particle.y
+	theta = particle.theta
 	color('blue')
 	shape('circle')
 	resizemode('user')
@@ -193,8 +210,11 @@ def stampParticle(x, y, theta):
 	setposition(offsetx + scale*x, offsety + scale*y)
 	stamp()
 
-def stampRobot(x, y, theta):
-	color('red')
+def stampRobot(robot, _color):
+	x = robot.x
+	y = robot.y
+	theta = robot.theta
+	color(_color)
 	shape('circle')
 	resizemode('user')
 	turtlesize(1.0,1.0,2.0)
@@ -202,7 +222,7 @@ def stampRobot(x, y, theta):
 	setposition(offsetx + scale*x, offsety + scale*y)
 	stamp()
 
-def eval(robot, particles):
+def meanError(robot, particles):
 	sum = 0.0
 	for i in range(len(particles)):
 		dx = (particles[i].x - robot.x + (world_x/2.0)) % world_x - (world_x/2.0)
@@ -210,5 +230,22 @@ def eval(robot, particles):
 		err = sqrt(dx * dx + dy * dy)
 		sum += err
 	return sum / float(len(particles))
+
+def meanLocation(particles):
+	count = len(particles)
+	x_sum = 0.0
+	y_sum = 0.0
+	theta_sum = 0
+	
+	for i in range(count):
+		p = particles[i]
+		x_sum += p.x
+		y_sum += p.y
+		theta_sum += p.theta
+
+	x_avg = x_sum / float(count)
+	y_avg = y_sum / float(count)
+	theta_avg = theta_sum / float(count)
+	return Robot(x_avg, y_avg, theta_avg)
 
 main()
