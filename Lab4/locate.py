@@ -18,7 +18,7 @@ world_y = 0
 object_list = [] #store position of map objects in this list
 particle_list = [] #store Particle instances in this list
 robot = None
-MOVES = 1
+MOVES = 100
 BUFFER = 1 #maintain particles a certain distance from objects
 
 def main():
@@ -26,24 +26,55 @@ def main():
 	
 	if len(sys.argv) == 3:
 		createInitialObjects()
-		createInitialRobot()
 		createInitialParticles()
+		createInitialRobot()
+		stampAll()
 	else:
 		print "Error: Incorrect command line arguments"
 		print "Format: python locate.py <coordinates_filename> <particle_count>"
 		sys.exit(1)
 	
+	print "Mean error at start", eval(robot, particle_list)
+	#print particle_list
+
 	for move in range(MOVES):
 		robot.move(5, 0)
+		dist_list = robot.sense()
 
 		p2 = []
-
 		for i in range(particle_count):
 			p2.append(particle_list[i].move(5,0))
 
 		particle_list = p2
-	x = particle_list[0].sense()
-	print x
+
+		weight_list = []
+		for i in range(particle_count):
+			weight_list.append(particle_list[i].measurement_prob(dist_list))
+
+		p3 = []
+		index = int(random.random() * particle_count)
+		beta = 0.0
+		max_weight = max(weight_list)
+		for i in range(particle_count):
+			beta += random.random() * 2.0 * max_weight
+			while beta > weight_list[index]:
+				beta -= weight_list[index]
+				index = (index + 1) % particle_count
+			p3.append(particle_list[index])
+
+		particle_list = p3
+
+		print "Mean error", eval(robot, particle_list)
+
+	stampAll()
+
+	print ' '
+	if eval(robot, particle_list) > 0.0:
+		for i in range(particle_count/100):
+			print 'Final particle #', i*100, particle_list[i*100]
+		print ' '
+		print 'Actual Robot Location', robot
+	
 	done()
 
 def createInitialObjects():
@@ -66,7 +97,6 @@ def createInitialObjects():
 
 def createInitialParticles():
 	global particle_count
-	clearstamps()
 	particle_count = int(sys.argv[2])
 	for p in range(0, particle_count):
 		positionTuple = findRandomPosition()
@@ -76,10 +106,8 @@ def createInitialParticles():
 		
 		#add particle to particle_list
 		particle = Particle(i, j, theta, 0)
+		particle.set_noise(0.05, 0.05, 5.0)
 		particle_list.append(particle)
-		#draw every 10 particles
-		if p % 10 == 0:
-			stampParticle(i, j, theta)
 
 def createInitialRobot():
 	global robot
@@ -88,7 +116,6 @@ def createInitialRobot():
 	j = positionTuple[1]
 	theta = positionTuple[2]
 	robot = Robot(i, j, theta)
-	stampRobot(i, j, theta)
 
 def findRandomPosition():
 	global world_x, world_y
@@ -147,6 +174,16 @@ def drawObstacle(x, y):
 	penup()
 	end_fill()
 
+def stampAll():
+	global robot, particle_list
+	clearstamps()
+	stampRobot(robot.x, robot.y, robot.theta)
+	for i in range(0, len(particle_list)):
+		p = particle_list[i]
+		#draw every 10 particles
+		if i % 10 == 0:
+			stampParticle(p.x, p.y, p.theta)
+
 def stampParticle(x, y, theta):
 	color('blue')
 	shape('circle')
@@ -164,5 +201,14 @@ def stampRobot(x, y, theta):
 	setheading(theta)
 	setposition(offsetx + scale*x, offsety + scale*y)
 	stamp()
+
+def eval(robot, particles):
+	sum = 0.0
+	for i in range(len(particles)):
+		dx = (particles[i].x - robot.x + (world_x/2.0)) % world_x - (world_x/2.0)
+		dy = (particles[i].y - robot.y + (world_y/2.0)) % world_y - (world_y/2.0)
+		err = sqrt(dx * dx + dy * dy)
+		sum += err
+	return sum / float(len(particles))
 
 main()
