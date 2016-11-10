@@ -65,3 +65,71 @@ class Particle(object):
 		'''calculates the probability of x for 1-dim Gaussian with mean mu & var sigma'''
 		sig_sq = sigma ** 2.0
 		return math.exp(- ((mu-x)**2) / sig_sq / 2.0) / math.sqrt(2.0 * math.pi * sig_sq)
+
+
+	def intersect(self, theta, p1, p2, dist):
+		theta_rad = math.radians(theta % 360)
+    	delta_x =  math.cos(theta_rad) * dist
+    	delta_y = math.sin(theta_rad) * dist
+    	x2 = self.x + delta_x
+    	y2 = self.y + delta_y
+    	#line eqn: Ax + By = C
+    	#eqn for sense line from particle out
+    	A1 = y2 - self.y
+    	B1 = self.x - x2
+    	C1 = A1*self.x + B1*self.y
+    	#eqn for obstacle side line 
+    	A2 = p2[1] - p1[1]
+    	B2 = p1[0] - p2[0]
+    	C2 = A2*p1[0] + B2*p1[1]
+    	det = A1*B2 - A2*B1
+    	#parallel lines, won't intersect
+    	if(det == 0):
+    		return 0
+    	else:
+    		#intersection point
+    		px = (B2*C1 - B1*C2)/det
+    		py = (A1*C2 - A2*C1)/det
+    		#check if intersection point falls in obstacle
+			if (min(p1[0], p2[0]) < px) and (max(p1[0], p2[0]) > px):
+		    	if (min(p1[1], p2[1]) < py) and (max(p1[1], p2[1]) > py):
+		    		dist = sqrt((px - self.x)**2 + (py - self.y)**2)
+		    		return dist
+        	return 0
+
+        
+    def sense(self, dist):
+        dist_list = []
+    	theta = self.theta - 90
+    	sense_dist = 0
+    	while(theta <= self.theta + 90):
+    		#check obstacle list to determine if sensor detects them at this angle theta
+    		intersects_list = []
+    		for i in range(0, len(object_list)):
+    			obstacle = object_list[i]
+    			p1 = (obstace[0], obstacle[1]) 
+    			p2 = (obstacle[0]+11.4, obstacle[1])
+    			p3 = (obstacle[0], obstacle[1]+11.4) 
+    			p4 = (obstace[0]+11.4, obstacle[1]+11.4)
+    			#also need points for the wall 
+    			intersects = [intersect(theta, p1, p2, dist), intersect(theta, p1, p3, dist), 
+    				intersect(theta, p3, p4, dist), intersect(theta, p2, p4, dist)]
+    			#add intersections from this obstacle to overall list of intersections
+    			intersects_list.extend(intersects)
+    			
+    		#find closest intersection out of all the obstacles
+    		min_dist = dist*2 
+			for j in range(0, len(intersects_list)):
+				if intersects_list[j] < min_dist and intersects_list[j] != 0:
+					min_dist = intersects_list[j]
+			#if no intersection at this theta then add 0 to list
+			#a real sensor should never return a distance of 0
+        	#since that would mean it's in an object
+        	#so 0 is a safe number to use to indicate no objects nearby
+			if min_dist == dist*2:
+				min_dist = 0
+        	#add sensor data to array
+        	dist_list.append(min_dist)
+        	#add to theta to continue sensing
+        	theta += 20
+    	return dist_list
