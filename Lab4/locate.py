@@ -26,7 +26,9 @@ BUFFER = 1 #maintain particles a certain distance from objects
 
 def main():
 	global particle_list, robotGuess, updates
-	
+
+	MAX_DIST = 20
+
 	if len(sys.argv) == 3:
 		createInitialObjects()
 		createInitialParticles()
@@ -41,19 +43,38 @@ def main():
 	#print particle_list
 
 	for move in range(MOVES):
-		robot.move(5, 0)
+		dist = 5
+		theta_diff = 0
+		'''
+		collision = True
+		while (collision):
+			dist = random.random() * MAX_DIST
+			testRobot = Robot(robot.x, robot.y, robot.theta)
+			testRobot.move(dist, theta_diff)
+
+			#MUST ALSO CHECK ROBOT DOES NOT GO OUT OF WORLD
+			if occupiedLocation(testRobot.x, testRobot.y):
+				robot.move(0, 45)
+		        theta_diff += 45 #rotate left 45 degrees
+			else:
+				collision = False
+		'''
+		robot.move(dist, 0)
 		updates += 1
-		dist_list = robot.sense()
+		r_dist_list = robot.sense(dist)
+		print r_dist_list
 
 		p2 = []
 		for i in range(particle_count):
-			p2.append(particle_list[i].move(5,0))
+			p2.append(particle_list[i].move(dist, theta_diff))
 
 		particle_list = p2
 
 		weight_list = []
 		for i in range(particle_count):
-			weight_list.append(particle_list[i].measurement_prob(dist_list))
+			p = particle_list[i]
+			p_dist_list = p.sense(dist)
+			weight_list.append(p.measurement_prob(r_dist_list, p_dist_list))
 
 		p3 = []
 		index = int(random.random() * particle_count)
@@ -135,18 +156,20 @@ def findRandomPosition():
 	i = random.random() * world_x
 	j = random.random() * world_y
 	theta = random.randint(0, 359)
-	restart = True
-	while restart:
-		restart = False
-		for x in range(0, len(object_list)):
-			obstacle = object_list[x]
-			if (obstacle[0] - BUFFER < i) and (i < obstacle[0] + 11.4 + BUFFER):
-				if (obstacle[1] - BUFFER < j) and (j < obstacle[1] + 11.4 + BUFFER):
-					i = random.random() * world_x
-					j = random.random() * world_y
-					restart = True
-					break
+
+	while occupiedLocation(i,j):
+		i = random.random() * world_x
+		j = random.random() * world_y
+
 	return (i, j, theta)	
+
+def occupiedLocation(x, y):
+	for i in range(0, len(object_list)):
+		obstacle = object_list[i]
+		if (obstacle[0] - BUFFER < x) and (x < obstacle[0] + 11.4 + BUFFER):
+			if (obstacle[1] - BUFFER < y) and (y < obstacle[1] + 11.4 + BUFFER):
+				return True
+	return False
 
 def drawWorld(x, y):
 	penup()
