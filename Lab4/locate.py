@@ -28,6 +28,7 @@ def main():
 	global particle_list, robotGuess, updates
 
 	MAX_DIST = 20
+	SENSE_DIST = 50
 
 	if len(sys.argv) == 3:
 		createInitialObjects()
@@ -43,26 +44,17 @@ def main():
 	#print particle_list
 
 	for move in range(MOVES):
-		dist = 5
+		dist = random.random() * MAX_DIST
 		theta_diff = 0
-		'''
-		collision = True
-		while (collision):
-			dist = random.random() * MAX_DIST
-			testRobot = Robot(robot.x, robot.y, robot.theta)
-			testRobot.move(dist, theta_diff)
 
-			#MUST ALSO CHECK ROBOT DOES NOT GO OUT OF WORLD
-			if occupiedLocation(testRobot.x, testRobot.y):
-				robot.move(0, 45)
-		        theta_diff += 45 #rotate left 45 degrees
-			else:
-				collision = False
-		'''
+		while (not robot.validMove(dist, robot.theta)):
+			dist = random.random() * MAX_DIST
+			robot.move(0, 45)
+			theta_diff += 45
+		
 		robot.move(dist, 0)
 		updates += 1
-		r_dist_list = robot.sense(dist)
-		print r_dist_list
+		r_dist_list = robot.sense(SENSE_DIST)
 
 		p2 = []
 		for i in range(particle_count):
@@ -73,7 +65,7 @@ def main():
 		weight_list = []
 		for i in range(particle_count):
 			p = particle_list[i]
-			p_dist_list = p.sense(dist)
+			p_dist_list = p.sense(SENSE_DIST)
 			weight_list.append(p.measurement_prob(r_dist_list, p_dist_list))
 
 		p3 = []

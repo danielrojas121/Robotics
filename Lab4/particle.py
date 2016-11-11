@@ -20,6 +20,11 @@ class Particle(object):
 	def __repr__(self):
 		return "[x=%.6s y=%.6s theta=%d]" % (str(self.x), str(self.y), self.theta)
 
+	def get_copy(self):
+		copy = Particle(self.x, self.y, self.theta, self.weight)
+		copy.set_noise(self.forward_noise, self.turn_noise, self.sense_noise)
+		return copy
+
 	def set_noise(self, forward_noise, turn_noise, sense_noise):
 		self.forward_noise = forward_noise
 		self.turn_noise = turn_noise
@@ -28,16 +33,23 @@ class Particle(object):
 	def move(self, dist, theta_diff):		
 		if dist < 0:
 			raise ValueError, "Robot can't move backwards"
-		#
+		
+		if not self.validMove(dist, theta_diff):
+			return self.get_copy()
+
 		self.theta += theta_diff + random.gauss(0.0, self.turn_noise)
 		self.theta %= 360
 		#initialize orientation in matrix
 		self.x += dist * math.cos(math.radians(self.theta))
 		self.y += dist * math.sin(math.radians(self.theta))
-		#set new particle
-		copy = Particle(self.x, self.y, self.theta, 0)
-		copy.set_noise(self.forward_noise, self.turn_noise, self.sense_noise)
-		return copy
+		'''
+		#wrap around particles when outside world boundaries
+		self.x = self.x if (self.x <= self.world_x) else (self.x - self.world_x)
+		self.x = self.x if (self.x >= 0.0) else (self.x + self.world_x)
+		self.y = self.y if (self.y <= self.world_y) else (self.y - self.world_y)
+		self.y = self.y if (self.y >= 0.0) else (self.y + self.world_y)
+		'''
+		return self.get_copy()
 
 	def validMove(self, dist, theta):
 		new_x = self.x + dist * math.cos(math.radians(theta))
@@ -46,6 +58,7 @@ class Particle(object):
 		if not self.inWorld(new_x, new_y):
 			return False
 
+		#consider checking range of 10 degrees or so
 		for intersect in self.intersections(dist, theta):
 			if intersect != None:
 				return False
@@ -56,20 +69,11 @@ class Particle(object):
 		if x < 0 or x > self.world_x or y < 0 or y > self.world_y:
 			return False
 		return True
-	'''
-	def sense(self):
-		dist_list = []
-		for i in range(len(self.object_list)):
-			dist = math.sqrt((self.x - (self.object_list[i][0] + 5.7)) ** 2 + (self.y - (self.object_list[i][1] + 5.7)) ** 2)
-			dist += random.gauss(0.0, self.sense_noise)
-			dist_list.append(dist)
-		return dist_list
-	'''
+
 	def measurement_prob(self, robot_sense, particle_sense):
 		'''calculates how likely a measurement should be'''
 		prob = 1.0
-		print "robot sense:", robot_sense
-		print "particle sense:", particle_sense
+
 		if not self.inWorld(self.x, self.y): 
 			return 0.0
 
@@ -109,11 +113,14 @@ class Particle(object):
 			#intersection point
 			px = (B2*C1 - B1*C2)/det
 			py = (A1*C2 - A2*C1)/det
-			#check if intersection point falls in obstacle
-			if (min(p1[0], p2[0]) <= px) and (max(p1[0], p2[0]) >= px):
-				if (min(p1[1], p2[1]) <= py) and (max(p1[1], p2[1]) >= py):
-					dist = math.sqrt((px - self.x)**2 + (py - self.y)**2)
-					return dist
+			#check if intersection falls on path of movement
+			if (min(self.x, x2) <= px) and (max(self.x, x2) >= px):
+				if (min(self.y, y2) <= py) and (max(self.y, y2) >= py):
+					#check if intersection point falls in obstacle
+					if (min(p1[0], p2[0]) <= px) and (max(p1[0], p2[0]) >= px):
+						if (min(p1[1], p2[1]) <= py) and (max(p1[1], p2[1]) >= py):
+							dist = math.sqrt((px - self.x)**2 + (py - self.y)**2)
+							return dist
 			#if no intersection just return None
 			return None
 
@@ -148,7 +155,6 @@ class Particle(object):
 		while(theta <= self.theta + 90):
 			#check obstacle list and walls to determine if sensor detects them at this angle theta
 			intersects_list = self.intersections(dist, theta)
-				
 			#find closest intersection out of all the obstacles
 			min_dist = self.world_x * self.world_y 
 			for j in range(0, len(intersects_list)):
