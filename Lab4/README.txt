@@ -21,7 +21,9 @@ Robot class that inherits from the particle class.
 Invoking program details
 ------------------------------------------------------------------------------
 Invoke program: python locate.py [coordinate file] [particle count]
-Example: python locate.py coordinates.txt 5000
+Example: python locate.py coordinates.txt 15000
+
+As shown above, we have occasionaly ran our program with 15000 particles. This provides greatest accuracty.
 
 A coordinates file is needed to supply world size and obstacle placement. The format is as specified in the lab. Example:
 200 200
@@ -38,7 +40,7 @@ The algorithm will run an amount depending on the value of the MOVES constant. T
 
 Robot action:
 The robot is moved a random distance with a max ditance of MAX_DIST and min ditance of MIN_DIST. This is checked to be a valid move.
-A valid move means that the robot will not collide with the wall or obstacle.
+A valid move means that the robot will not collide with an obstacle. Moving into a wall will wrap the robot around to the other side of the world.
 If not valid, pick another random distance after rotating 45 degrees and this move will be checked again.
 If valid, then the robot will be moved and scan the world.
 
@@ -47,7 +49,7 @@ The behavior of particle and robot scanning is the same. They scan 180 degrees i
 The scan is checked in 20 degree increments and calculates the distance to an obstacle or wall (or nothing) at each increment.
 
 Particle action:
-Particles will mirror the same move as the robot. If this move puts a particle outside of the world, the particle is considered to have stayed at the wall at the point it collides and these particles are given a probability of 0.
+Particles will mirror the same move as the robot. If this move puts a particle outside of the world, the particle is wrapped around to the other side just like the robot.
 The particle will now scan the environment.
 
 Probability measurement and resampling:
@@ -60,8 +62,8 @@ The updated particle list and the robot is used to print the results of the prog
 
 Outcome
 ------------------------------------------------------------------------------
-Currently our program is unable to accurately calculate the robot's position. There seems to be an error with the way probabilities of the particles are calculated and the weights they are given.
+Currently our program is unable to accurately calculate the robot's position. There seems to be an error with the way probabilities of the particles are calculated and the weights they are given. We find that the calculated probabilities for particles are 0 most of the time by printing the probability list.
 During certain runs, the particles will converge in anticated spots which leads us to believe that the probability isn't wrong all of the time.
 But with continued moves, the accuracy will diminish and the program ends with inaccurate result.
 
-With more time, we would hope to improve the accuracy of the program. This would involve further debugging of the probability and wight assignments of the particles
+With more time, we would hope to improve the accuracy of the program. This would involve further debugging of the probability and wight assignments of the particles.
