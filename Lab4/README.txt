@@ -27,7 +27,7 @@ A coordinates file is needed to supply world size and obstacle placement. The fo
 200 200
 20 20
 40 40
-150 200
+150 150
 
 
 Program
