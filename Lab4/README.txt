@@ -60,7 +60,8 @@ The updated particle list and the robot is used to print the results of the prog
 
 Outcome
 ------------------------------------------------------------------------------
-Currently our program is unable to accurately calculate the robot's position. There seems to be an error with the way probabilities of the particles are calculated.
-During certain runs, the particles will converge pretty well but this doesn't happen all of the time.
+Currently our program is unable to accurately calculate the robot's position. There seems to be an error with the way probabilities of the particles are calculated and the weights they are given.
+During certain runs, the particles will converge in anticated spots which leads us to believe that the probability isn't wrong all of the time.
+But with continued moves, the accuracy will diminish and the program ends with inaccurate result.
 
-With more time, we would hope to improve the accuracy of the program. This would involve further debugging of the probability assignment of the particles.
+With more time, we would hope to improve the accuracy of the program. This would involve further debugging of the probability and wight assignments of the particles
