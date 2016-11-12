@@ -26,29 +26,24 @@ class Particle(object):
 		return copy
 
 	def set_noise(self, forward_noise, turn_noise, sense_noise):
-		self.forward_noise = forward_noise
-		self.turn_noise = turn_noise
-		self.sense_noise = sense_noise
+		self.forward_noise = float(forward_noise)
+		self.turn_noise = float(turn_noise)
+		self.sense_noise = float(sense_noise)
 
 	def move(self, dist, theta_diff):		
 		if dist < 0:
 			raise ValueError, "Robot can't move backwards"
-		
-		if not self.validMove(dist, theta_diff):
-			return self.get_copy()
 
 		self.theta += theta_diff + random.gauss(0.0, self.turn_noise)
 		self.theta %= 360
-		#initialize orientation in matrix
 		self.x += dist * math.cos(math.radians(self.theta))
 		self.y += dist * math.sin(math.radians(self.theta))
-		'''
+
 		#wrap around particles when outside world boundaries
 		self.x = self.x if (self.x <= self.world_x) else (self.x - self.world_x)
 		self.x = self.x if (self.x >= 0.0) else (self.x + self.world_x)
 		self.y = self.y if (self.y <= self.world_y) else (self.y - self.world_y)
 		self.y = self.y if (self.y >= 0.0) else (self.y + self.world_y)
-		'''
 		return self.get_copy()
 
 	def validMove(self, dist, theta):
@@ -85,7 +80,7 @@ class Particle(object):
 
 	def Gaussian(self, mu, sigma, x):
 		'''calculates the probability of x for 1-dim Gaussian with mean mu & var sigma'''
-		sig_sq = sigma ** 2.0
+		sig_sq = sigma ** 2
 		return math.exp(- ((mu-x)**2) / sig_sq / 2.0) / math.sqrt(2.0 * math.pi * sig_sq)
 
 
@@ -161,6 +156,7 @@ class Particle(object):
 				if intersects_list[j] < min_dist and intersects_list[j] != None:
 					min_dist = intersects_list[j]
 
+			min_dist += random.gauss(0.0, self.sense_noise)
 			#add sensor data to array
 			dist_list.append(min_dist)
 			#add to theta to continue sensing

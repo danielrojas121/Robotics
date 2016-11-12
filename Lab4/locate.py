@@ -27,8 +27,9 @@ BUFFER = 1 #maintain particles a certain distance from objects
 def main():
 	global particle_list, robotGuess, updates
 
-	MAX_DIST = 20
-	SENSE_DIST = 50
+	MIN_DIST = 5.0
+	MAX_DIST = 20.0
+	SENSE_DIST = MAX_DIST + MIN_DIST
 
 	if len(sys.argv) == 3:
 		createInitialObjects()
@@ -44,11 +45,11 @@ def main():
 	#print particle_list
 
 	for move in range(MOVES):
-		dist = random.random() * MAX_DIST
+		dist = random.random() * MAX_DIST + MIN_DIST
 		theta_diff = 0
 
 		while (not robot.validMove(dist, robot.theta)):
-			dist = random.random() * MAX_DIST
+			dist = random.random() * MAX_DIST + MIN_DIST
 			robot.move(0, 45)
 			theta_diff += 45
 		
