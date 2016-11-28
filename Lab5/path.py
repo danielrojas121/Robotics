@@ -59,7 +59,17 @@ def read_file(infile):
 	object_list.append(vertex_list)
 
 def grow_obstacles():
-	global object_list, start_point, end_point
+	global object_list, start_point, end_point, object_list2
+	i = 0
+	while(i<len(object_list)):
+		vertex_list = []
+		coordinates = object_list[i]
+		j = 0 
+		while(j<len(coordinates)):
+			vertex_list.append(grown_vertices(coordinates[j]))
+			j+=1
+		object_list2.append(vertex_list)
+		i+=1
 
 def grown_vertices(vertex):
 	'''vertex is a coordinate tuple'''
