@@ -8,12 +8,18 @@ scale = 2
 offsetx = -scale/2 * 250
 offsety = -scale/2 * 250
 object_list = []
+start_point = None
+end_point = None
+R_LENGTH = 26
+R_WIDTH = 16
+ORIENTATION = 0
 
 def main():
 	if len(sys.argv) == 2:
 		filename = sys.argv[1]
 		f = open(filename, 'r')
 		read_file(f)
+		draw_objects()
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -21,9 +27,13 @@ def main():
 		sys.exit(1)
 
 def read_file(infile):
+	global start_point, end_point
+
 	start_x, start_y = [int(x) for x in infile.readline().split()]
 	goal_x, goal_y = [int(x) for x in infile.readline().split()]
 	world_x, world_y = [int(x) for x in infile.readline().split()]
+	start_point = (start_x, start_y)
+	end_point = (goal_x, goal_y)
 
 	draw_world(world_x, world_y)
 	draw_circle(start_x, start_y)
@@ -46,7 +56,17 @@ def read_file(infile):
 			v_count -= 1
 		line = infile.readline()
 	object_list.append(vertex_list)
-	draw_objects()
+
+def grow_obstacles():
+	global object_list, start_point, end_point
+
+def grown_vertices(vertex):
+	global R_LENGTH, R_WIDTH, ORIENTATION
+
+	vertices = []
+	theta = ORIENTATION
+
+	return vertices
 
 def draw_world(x, y):
 	penup()
