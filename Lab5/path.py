@@ -1,5 +1,6 @@
 from turtle import *
 import sys
+import math
 
 mode('standard')
 color('orange')
@@ -61,11 +62,24 @@ def grow_obstacles():
 	global object_list, start_point, end_point
 
 def grown_vertices(vertex):
+	'''vertex is a coordinate tuple'''
 	global R_LENGTH, R_WIDTH, ORIENTATION
-
 	vertices = []
 	theta = ORIENTATION
+	x = vertex[0]
+	y = vertex[1]
 
+	x1 = x + R_LENGTH * math.cos(math.radians(theta))
+	y1 = y + R_LENGTH * math.sin(math.radians(theta))
+	vertices.append((x1,y1))
+	theta = (theta + 90) % 360
+	x2 = x1 + R_WIDTH * math.cos(math.radians(theta))
+	y2 = y1 + R_WIDTH * math.sin(math.radians(theta))
+	vertices.append((x2,y2))
+	theta = (theta + 90) % 360
+	x3 = x2 + R_LENGTH * math.cos(math.radians(theta))
+	y3 = y2 + R_LENGTH * math.sin(math.radians(theta))
+	vertices.append((x3,y3))
 	return vertices
 
 def draw_world(x, y):
