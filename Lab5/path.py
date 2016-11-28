@@ -14,6 +14,7 @@ end_point = None
 R_LENGTH = 26
 R_WIDTH = 16
 ORIENTATION = 0
+BIG_NUMBER = 1000
 
 def main():
 	if len(sys.argv) == 2:
@@ -21,6 +22,7 @@ def main():
 		f = open(filename, 'r')
 		read_file(f)
 		draw_objects()
+		grow_obstacles()
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -59,17 +61,26 @@ def read_file(infile):
 	object_list.append(vertex_list)
 
 def grow_obstacles():
-	global object_list, start_point, end_point, object_list2
+	global object_list, start_point, end_point
 	i = 0
+	object_list2 = []
 	while(i<len(object_list)):
-		vertex_list = []
+		obj_verts = []
 		coordinates = object_list[i]
 		j = 0 
 		while(j<len(coordinates)):
-			vertex_list.append(grown_vertices(coordinates[j]))
+			vertex_list = grown_vertices(coordinates[j])
+			k = 0
+			while(k<len(vertex_list)):
+				obj_verts.append(vertex_list[k])
+				k += 1
 			j+=1
-		object_list2.append(vertex_list)
+		object_list2.append(obj_verts)
+		convex_hull(obj_verts)
 		i+=1
+	print "object_list2 ", object_list2
+	print "--------------------------------------------------"
+	#convex_hull(object_list2)
 
 def grown_vertices(vertex):
 	'''vertex is a coordinate tuple'''
@@ -78,6 +89,7 @@ def grown_vertices(vertex):
 	theta = ORIENTATION
 	x = vertex[0]
 	y = vertex[1]
+	vertices.append((x, y))
 
 	x1 = x + R_LENGTH * math.cos(math.radians(theta))
 	y1 = y + R_LENGTH * math.sin(math.radians(theta))
@@ -91,6 +103,57 @@ def grown_vertices(vertex):
 	y3 = y2 + R_LENGTH * math.sin(math.radians(theta))
 	vertices.append((x3,y3))
 	return vertices
+
+def convex_hull(points):
+	n = len(points)
+	#find rightmost, lowest points
+	print "points: ", points
+	print "----------------------"
+	p = lowest_point(points, n)
+	print "p: ", p
+	print "-----------------------"
+	#get points sorted in order of angularity
+	points = sort_polar(points, p, n)
+	print "Sorted: ", points
+	print "-----------------------------------------------"
+
+
+def lowest_point(points, length):
+	#find lowest point, if tied pick rightmost point
+	i = 0
+	p = (0, BIG_NUMBER)
+	while(i<length):
+		if points[i][1] < p[1]:
+			p = points[i]
+		elif points[i][1] == p[1]:
+			if points[i][0] > p[0]:
+				p = points[i]	
+		i+=1
+	return p	
+
+def sort_polar(points, p, n):
+	i = 0
+	polar_list = []
+	while(i < n):
+		polar_list.append(find_polar(p, points[i]))
+		i+=1
+	print polar_list
+	#polar_list.sort(key=polar_list[0][0])
+	polar_list = sorted(polar_list, key=lambda polar: polar[0])
+	return polar_list
+
+
+def find_polar(p1, p2):
+	y = p2[1]-p1[1]
+	x = p2[0] - p1[0]
+	if(x == 0):
+		theta = 0
+		r = 0
+		return (theta, r)
+	theta = math.atan(y/x)
+	r = math.hypot(x, y)
+	return (theta, r)
+
 
 def draw_world(x, y):
 	penup()
