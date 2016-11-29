@@ -1,4 +1,5 @@
 from turtle import *
+from operator import itemgetter
 import sys
 import math
 
@@ -63,7 +64,7 @@ def read_file(infile):
 def grow_obstacles():
 	global object_list, start_point, end_point
 	i = 0
-	object_list2 = []
+	#object_list2 = []
 	while(i<len(object_list)):
 		obj_verts = []
 		coordinates = object_list[i]
@@ -75,12 +76,9 @@ def grow_obstacles():
 				obj_verts.append(vertex_list[k])
 				k += 1
 			j+=1
-		object_list2.append(obj_verts)
+		#object_list2.append(obj_verts)
 		convex_hull(obj_verts)
 		i+=1
-	print "object_list2 ", object_list2
-	print "--------------------------------------------------"
-	#convex_hull(object_list2)
 
 def grown_vertices(vertex):
 	'''vertex is a coordinate tuple'''
@@ -107,15 +105,12 @@ def grown_vertices(vertex):
 def convex_hull(points):
 	n = len(points)
 	#find rightmost, lowest points
-	print "points: ", points
-	print "----------------------"
 	p = lowest_point(points, n)
-	print "p: ", p
-	print "-----------------------"
 	#get points sorted in order of angularity
 	points = sort_polar(points, p, n)
 	print "Sorted: ", points
 	print "-----------------------------------------------"
+	#need to compute points on stack - graham scan wiki
 
 
 def lowest_point(points, length):
@@ -131,28 +126,46 @@ def lowest_point(points, length):
 		i+=1
 	return p	
 
+#sorts point based on how far they are from point 0
 def sort_polar(points, p, n):
 	i = 0
 	polar_list = []
+	sorted_list = []
+	sorted_list.append(p)
 	while(i < n):
-		polar_list.append(find_polar(p, points[i]))
+		polar_list.append(find_polar(p, points[i], i))
 		i+=1
-	print polar_list
-	#polar_list.sort(key=polar_list[0][0])
-	polar_list = sorted(polar_list, key=lambda polar: polar[0])
-	return polar_list
+	#secondary sort on distance away from point 0, in case of same angle
+	polar_list = sorted(polar_list, key=itemgetter(1))
+	#primary sort based on angular distance from point 0
+	polar_list = sorted(polar_list, key=itemgetter(0))
+	i = 0
+	while(i<n):
+		if(polar_list[i][0] == 0):
+			i+=1
+			continue
+		index = polar_list[i][2]
+		sorted_list.append(points[index])
+		i+=1
+	return sorted_list
 
 
-def find_polar(p1, p2):
-	y = p2[1]-p1[1]
+#returns how far each point is from point 0 based on angle and distance
+def find_polar(p1, p2, index):
+	y = p2[1] - p1[1]
 	x = p2[0] - p1[0]
 	if(x == 0):
-		theta = 0
-		r = 0
-		return (theta, r)
-	theta = math.atan(y/x)
+		if y==0: 
+			theta = 0
+		else: 
+			theta = 90
+		r = y
+		return (theta, r, index)
+	theta = math.degrees(math.atan(y/x))
+	if theta < 0 or theta == -0.0: 
+		theta = 180 + theta
 	r = math.hypot(x, y)
-	return (theta, r)
+	return (theta, r, index)
 
 
 def draw_world(x, y):
