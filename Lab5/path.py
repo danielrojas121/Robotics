@@ -1,5 +1,7 @@
 from turtle import *
 from operator import itemgetter
+from matplotlib import path
+import matplotlib.pyplot as plt
 import sys
 import math
 
@@ -11,11 +13,12 @@ offsetx = -scale/2 * 250
 offsety = -scale/2 * 250
 object_list = []
 hull_list = []
+nodes = []
 start_point = None
 end_point = None
 R_LENGTH = 26
 R_WIDTH = 16
-ORIENTATION = 0
+ORIENTATION = 45
 BIG_NUMBER = 1000
 
 def main():
@@ -25,6 +28,11 @@ def main():
 		read_file(f)
 		draw_objects(object_list)
 		grow_obstacles()
+		draw_objects(hull_list)
+		graph_vertices()
+		graph_edges()
+		#draw_edges()
+
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -63,7 +71,7 @@ def read_file(infile):
 	object_list.append(vertex_list)
 
 def grow_obstacles():
-	global object_list, start_point, end_point, hull_list
+	global object_list, hull_list
 	i = 0
 	#for every object compute hull points
 	while(i<len(object_list)):
@@ -79,7 +87,6 @@ def grow_obstacles():
 			j+=1
 		hull_list.append(convex_hull(obj_verts))
 		i+=1
-	draw_objects(hull_list)
 
 
 def grown_vertices(vertex):
@@ -191,6 +198,27 @@ def find_hull(points, n):
 			stack.append(p1)
 	return stack
 
+def graph_vertices():
+	global hull_list, nodes, start_point, end_point
+	i = 0
+	#for every object compute hull points
+	while(i<len(hull_list)):
+		coordinates = hull_list[i]
+		j = 0 
+		while(j<len(coordinates)):
+			nodes.append(coordinates[j])
+			j+=1
+		i+=1
+	nodes.append(start_point)
+	nodes.append(end_point)
+
+def graph_edges():
+	global nodes
+
+	p = path.Path(nodes)
+	print p
+	print p.contains_points([(5,5), (4,0), (6,0), (10,5), (5,10), (0,5)], radius=0.01)
+
 def draw_world(x, y):
 	penup()
 	setposition(offsetx, offsety)
@@ -220,7 +248,6 @@ def draw_circle(x, y):
 
 def draw_objects(object_list):
 	#global object_list
-
 	penup()
 	i = 0
 	while(i<len(object_list)):
@@ -233,5 +260,18 @@ def draw_objects(object_list):
 		setposition(coordinates[0][0] * scale + offsetx, coordinates[0][1] * scale + offsety)
 		penup()
 		i+=1
+
+def draw_edges():
+	global nodes
+	penup()
+	i = 0
+	for i in range(0, len(nodes) - 1):
+		for j in range(i+1, len(nodes)):
+			setposition(nodes[i][0] * scale + offsetx, nodes[i][1] * scale + offsety)
+			pendown()
+			setposition(nodes[j][0] * scale + offsetx, nodes[j][1] * scale + offsety)
+			penup()
+			j += 1
+		i += 1
 
 main()
