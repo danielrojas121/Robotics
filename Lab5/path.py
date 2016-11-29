@@ -10,6 +10,7 @@ scale = 2
 offsetx = -scale/2 * 250
 offsety = -scale/2 * 250
 object_list = []
+hull_list = []
 start_point = None
 end_point = None
 R_LENGTH = 26
@@ -22,7 +23,7 @@ def main():
 		filename = sys.argv[1]
 		f = open(filename, 'r')
 		read_file(f)
-		draw_objects()
+		draw_objects(object_list)
 		grow_obstacles()
 		done()
 	else:
@@ -62,9 +63,9 @@ def read_file(infile):
 	object_list.append(vertex_list)
 
 def grow_obstacles():
-	global object_list, start_point, end_point
+	global object_list, start_point, end_point, hull_list
 	i = 0
-	#object_list2 = []
+	#for every object compute hull points
 	while(i<len(object_list)):
 		obj_verts = []
 		coordinates = object_list[i]
@@ -76,9 +77,10 @@ def grow_obstacles():
 				obj_verts.append(vertex_list[k])
 				k += 1
 			j+=1
-		#object_list2.append(obj_verts)
-		convex_hull(obj_verts)
+		hull_list.append(convex_hull(obj_verts))
 		i+=1
+	draw_objects(hull_list)
+
 
 def grown_vertices(vertex):
 	'''vertex is a coordinate tuple'''
@@ -110,7 +112,8 @@ def convex_hull(points):
 	points = sort_polar(points, p, n)
 	print "Sorted: ", points
 	print "-----------------------------------------------"
-	#need to compute points on stack - graham scan wiki
+	#need to compute points on stack
+	return find_hull(points, n)
 
 
 def lowest_point(points, length):
@@ -167,6 +170,26 @@ def find_polar(p1, p2, index):
 	r = math.hypot(x, y)
 	return (theta, r, index)
 
+def find_hull(points, n):
+	stack = []
+	stack.append(points[n-1])
+	stack.append(points[0])
+
+	i = 1
+	while (i < n):
+		p2 = stack.pop()
+		p1 = stack.pop()
+		p3 = points[i]
+		
+		res = (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
+		if res >= 0:
+			stack.append(p1)
+			stack.append(p2)
+			stack.append(p3)
+			i += 1
+		else:
+			stack.append(p1)
+	return stack
 
 def draw_world(x, y):
 	penup()
@@ -195,8 +218,8 @@ def draw_circle(x, y):
 	penup()
 	end_fill()
 
-def draw_objects():
-	global object_list
+def draw_objects(object_list):
+	#global object_list
 
 	penup()
 	i = 0
