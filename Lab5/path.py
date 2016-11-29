@@ -14,6 +14,7 @@ offsety = -scale/2 * 250
 object_list = []
 hull_list = []
 nodes = []
+edges = []
 start_point = None
 end_point = None
 R_LENGTH = 26
@@ -215,9 +216,46 @@ def graph_vertices():
 def graph_edges():
 	global nodes
 
-	p = path.Path(nodes)
-	print p
-	print p.contains_points([(5,5), (4,0), (6,0), (10,5), (5,10), (0,5)], radius=0.01)
+	#p = path.Path(nodes)
+	#print p
+	#print p.contains_points([(5,5), (4,0), (6,0), (10,5), (5,10), (0,5)], radius=0.01)
+	i = 0
+	while(i<len(nodes))
+
+
+def intersect(p1, p2, p3, p4):
+	'''intersects stuff'''
+	x2 = p2[0]
+	x1 = p1[0]
+	y2 = p2[1]
+	y1 = p1[1]
+	#line eqn: Ax + By = C
+	#eqn for edge
+	A1 = y2 - y1
+	B1 = x1 - x2
+	C1 = A1*x1 + B1*y1
+	#eqn for object side line 
+	A2 = p4[1] - p3[1]
+	B2 = p3[0] - p4[0]
+	C2 = A2*p3[0] + B2*p3[1]
+	det = A1*B2 - A2*B1
+	#parallel lines, won't intersect
+	if(det == 0):
+		return None
+	else:
+		#intersection point
+		px = (B2*C1 - B1*C2)/det
+		py = (A1*C2 - A2*C1)/det
+		#check if intersection falls on path of movement
+		if (min(x1, x2) < px) and (max(x1, x2) > px):
+			if (min(y1, y2) < py) and (max(y1, y2) > py):
+				#check if intersection point falls in obstacle
+				if (min(p1[0], p2[0]) < px) and (max(p1[0], p2[0]) > px):
+					if (min(p1[1], p2[1]) < py) and (max(p1[1], p2[1]) > py):
+						#dist = math.sqrt((px - x1)**2 + (py - y1)**2)
+						return True
+		#if no intersection just return None
+		return False
 
 def draw_world(x, y):
 	penup()
@@ -262,15 +300,20 @@ def draw_objects(object_list):
 		i+=1
 
 def draw_edges():
-	global nodes
+	global nodes, edges, object_list
 	penup()
-	i = 0
 	for i in range(0, len(nodes) - 1):
 		for j in range(i+1, len(nodes)):
+			for k in range(0, len(object_list)):
+				coordinates = object_list[k]
+				for m in range(0, len(coordinates)):
+					if intersects: 
+
 			setposition(nodes[i][0] * scale + offsetx, nodes[i][1] * scale + offsety)
 			pendown()
 			setposition(nodes[j][0] * scale + offsetx, nodes[j][1] * scale + offsety)
 			penup()
+
 			j += 1
 		i += 1
 
