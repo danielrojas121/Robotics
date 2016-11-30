@@ -38,15 +38,8 @@ def main():
 		graph_vertices()
 		graph_edges()
 		draw_edges()
-		path = dijkstra(nodes, nodes_dict, start_point)
-		print "visited:"
-		print "------------------------------------"
-		print path[0]
-		print "------------------------------------"
-		print "path:"
-		print "------------------------------------"
-		print path[1]
-		print "------------------------------------"
+		g = dijkstra(nodes, nodes_dict, start_point)
+		draw_path(g[1], start_point, end_point)
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -388,6 +381,7 @@ def draw_objects(object_list):
 
 def draw_edges():
 	global edges
+
 	color('blue')
 	penup()
 	for edge in edges:
@@ -395,5 +389,19 @@ def draw_edges():
 		pendown()
 		setposition(edge[1][0] * scale + offsetx, edge[1][1] * scale + offsety)
 		penup()
+
+def draw_path(path, start, end):
+	color('green')
+	pensize(2)
+
+	node = end
+	penup()
+	setposition(node[0] * scale + offsetx, node[1] * scale + offsety)
+	pendown()
+	while (node != start):
+		node = path[node]
+		setposition(node[0] * scale + offsetx, node[1] * scale + offsety)
+	
+	penup()
 	
 main()
