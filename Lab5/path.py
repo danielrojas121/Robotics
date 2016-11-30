@@ -19,7 +19,7 @@ start_point = None
 end_point = None
 R_LENGTH = 26
 R_WIDTH = 16
-ORIENTATION = 0
+ORIENTATION = 45 #CANNOT BE ON THE X=0 OR Y=0 AXIS
 BIG_NUMBER = 1000
 
 def main():
@@ -112,9 +112,7 @@ def grown_vertices(vertex):
 def convex_hull(points):
 	n = len(points)
 	#find rightmost, lowest points
-	#p = rightmost_point(points)
 	p = lowest_point(points)
-	print "p: ", p
 	#get points sorted in order of angularity
 	points = sort_polar(points, p, n)
 	#print "Sorted: ", points
@@ -134,24 +132,13 @@ def lowest_point(points):
 				p = point   
 	return p   
 
-def rightmost_point(points):
-	'''find the rightmost, lowest point'''
-	p = (0, BIG_NUMBER)
-	for point in points:
-		if point[0] > p[0]:
-			p = point
-		elif point[0] == p[0]:
-			if point[1] < p[1]:
-				p = point
-	return p 
-
 #sorts point based on how far they are from point 0
 def sort_polar(points, p, n):
-	i = 0
 	polar_list = []
 	sorted_list = []
 	sorted_list.append(p)
-	print points
+	
+	i = 0
 	while(i < n):
 		polar_list.append(find_polar(p, points[i], i))
 		i+=1
@@ -159,14 +146,13 @@ def sort_polar(points, p, n):
 	polar_list = sorted(polar_list, key=itemgetter(1))
 	#primary sort based on angular distance from point 0
 	polar_list = sorted(polar_list, key=itemgetter(0))
-	i = 0
-	while(i<n):
-		if(polar_list[i][0] == 0):
-			i+=1
+
+	for p in polar_list:
+		if(p[0] == 0):
 			continue
-		index = polar_list[i][2]
+		index = p[2]
 		sorted_list.append(points[index])
-		i+=1
+
 	return sorted_list
 
 #returns how far each point is from point 0 based on angle and distance
@@ -209,7 +195,6 @@ def graph_vertices():
 		del hull[-1] # LAST ELEMENT IN HULL_LIST IS A COPY OF FIRST ELEMENT
 		for coordinate in hull:
 			nodes.append(coordinate)
-	print hull_list
 	nodes.append(start_point)
 	nodes.append(end_point)
 
