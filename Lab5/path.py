@@ -19,7 +19,7 @@ start_point = None
 end_point = None
 R_LENGTH = 26
 R_WIDTH = 16
-ORIENTATION = 45
+ORIENTATION = 0
 BIG_NUMBER = 1000
 
 def main():
@@ -77,22 +77,15 @@ def read_file(infile):
 
 def grow_obstacles():
 	global object_list, hull_list
-	i = 0
 	#for every object compute hull points
-	while(i<len(object_list)):
+	for obj in object_list:
 		obj_verts = []
-		coordinates = object_list[i]
-		j = 0 
-		while(j<len(coordinates)):
-			vertex_list = grown_vertices(coordinates[j])
-			k = 0
-			while(k<len(vertex_list)):
-				obj_verts.append(vertex_list[k])
-				k += 1
-			j+=1
+		vertices = obj
+		for vertex in vertices:
+			g_vertices = grown_vertices(vertex)
+			for g_vertex in g_vertices:
+				obj_verts.append(g_vertex)
 		hull_list.append(convex_hull(obj_verts))
-		i+=1
-
 
 def grown_vertices(vertex):
 	'''vertex is a coordinate tuple'''
@@ -119,27 +112,38 @@ def grown_vertices(vertex):
 def convex_hull(points):
 	n = len(points)
 	#find rightmost, lowest points
-	p = lowest_point(points, n)
+	#p = rightmost_point(points)
+	p = lowest_point(points)
+	print "p: ", p
 	#get points sorted in order of angularity
 	points = sort_polar(points, p, n)
-	print "Sorted: ", points
-	print "-----------------------------------------------"
+	#print "Sorted: ", points
+	#print "-----------------------------------------------"
 	#need to compute points on stack
 	return find_hull(points, n)
 
 
-def lowest_point(points, length):
+def lowest_point(points):
 	#find lowest point, if tied pick rightmost point
-	i = 0
 	p = (0, BIG_NUMBER)
-	while(i<length):
-		if points[i][1] < p[1]:
-			p = points[i]
-		elif points[i][1] == p[1]:
-			if points[i][0] > p[0]:
-				p = points[i]   
-		i+=1
-	return p    
+	for point in points:
+		if point[1] < p[1]:
+			p = point
+		elif point[1] == p[1]:
+			if point[0] > p[0]:
+				p = point   
+	return p   
+
+def rightmost_point(points):
+	'''find the rightmost, lowest point'''
+	p = (0, BIG_NUMBER)
+	for point in points:
+		if point[0] > p[0]:
+			p = point
+		elif point[0] == p[0]:
+			if point[1] < p[1]:
+				p = point
+	return p 
 
 #sorts point based on how far they are from point 0
 def sort_polar(points, p, n):
@@ -147,6 +151,7 @@ def sort_polar(points, p, n):
 	polar_list = []
 	sorted_list = []
 	sorted_list.append(p)
+	print points
 	while(i < n):
 		polar_list.append(find_polar(p, points[i], i))
 		i+=1
@@ -164,21 +169,11 @@ def sort_polar(points, p, n):
 		i+=1
 	return sorted_list
 
-
 #returns how far each point is from point 0 based on angle and distance
 def find_polar(p1, p2, index):
 	y = p2[1] - p1[1]
 	x = p2[0] - p1[0]
-	if(x == 0):
-		if y==0: 
-			theta = 0
-		else: 
-			theta = 90
-		r = y
-		return (theta, r, index)
-	theta = math.degrees(math.atan(y/x))
-	if theta < 0 or theta == -0.0: 
-		theta = 180 + theta
+	theta = math.degrees(math.atan2(y,x))
 	r = math.hypot(x, y)
 	return (theta, r, index)
 
@@ -214,7 +209,7 @@ def graph_vertices():
 		del hull[-1] # LAST ELEMENT IN HULL_LIST IS A COPY OF FIRST ELEMENT
 		for coordinate in hull:
 			nodes.append(coordinate)
-
+	print hull_list
 	nodes.append(start_point)
 	nodes.append(end_point)
 
@@ -227,12 +222,8 @@ def graph_edges():
 
 	valid_edges = []
 	for edge in edges:
-		#if count > 1:
-			#break
 		if valid_edge(edge):
 			valid_edges.append(edge)
-
-		#count += 1
 
 	edges = valid_edges
 	#print edges
@@ -241,6 +232,7 @@ def valid_edge(edge):
 	global hull_list
 
 	for hull in hull_list:
+		#special case when edge lies within an obstacle
 		if edge[0] in hull:
 			v1_index = hull.index(edge[0])
 			if edge[1] in hull:
@@ -248,10 +240,10 @@ def valid_edge(edge):
 				diff = abs(v2_index - v1_index)
 				if diff > 1 and diff != len(hull) - 1:
 					return False
-		for i in range(0, len(hull)):
-			#special case when last and first vertex connect
-			hull_p1 = hull[i]
 
+		for i in range(0, len(hull)):
+			hull_p1 = hull[i]
+			#special case when last and first vertex connect
 			if i == len(hull) - 1:
 				hull_p2 = hull[0]
 			else:
@@ -282,6 +274,7 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
 	A2 = o_y2 - o_y1
 	B2 = o_x1 - o_x2
 	C2 = A2*o_x1 + B2*o_y1
+	
 	det = A1*B2 - A2*B1
 	#parallel lines, won't intersect
 	if(det == 0):
