@@ -8,9 +8,9 @@ import math
 mode('standard')
 color('orange')
 speed(0)
-scale = 2
-offsetx = -scale/2 * 250
-offsety = -scale/2 * 250
+scale = 1.4
+offsetx = -scale/2 * 400
+offsety = -scale/2 * 400
 WORLD_X = None
 WORLD_Y = None
 object_list = []
@@ -55,7 +55,7 @@ def read_file(infile):
 	start_point = (start_x, start_y)
 	end_point = (goal_x, goal_y)
 
-	set_orientation(start_point, end_point)
+	#set_orientation(start_point, end_point)
 
 	draw_world(WORLD_X, WORLD_Y)
 	draw_circle(start_x, start_y)
@@ -302,6 +302,23 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
 				if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
 					if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
 						return True
+				#special cases where edge is horizontal or vertical
+				'''
+				if (o_y1 == o_y2):
+					if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
+						if (py >= o_y1-1 and py <= o_y1+1):
+							return True
+				if (o_x1 == o_x2):
+					if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
+						if (px >= o_x1-1 and px <= o_x1+1):
+							return True
+		elif (g_x1 == g_x2):
+			if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
+				return True
+		elif (g_y1 == g_y2):
+			if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
+				return True
+		'''
 		return False
 
 def dijkstra(nodes, nodes_dict, start_node):
