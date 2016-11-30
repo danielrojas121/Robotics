@@ -11,6 +11,8 @@ speed(0)
 scale = 2
 offsetx = -scale/2 * 250
 offsety = -scale/2 * 250
+WORLD_X = None
+WORLD_Y = None
 object_list = []
 hull_list = []
 nodes = []
@@ -42,18 +44,17 @@ def main():
 		sys.exit(1)
 
 def read_file(infile):
-	global start_point, end_point, ORIENTATION
+	global start_point, end_point, WORLD_X, WORLD_Y
 
 	start_x, start_y = [int(x) for x in infile.readline().split()]
 	goal_x, goal_y = [int(x) for x in infile.readline().split()]
-	world_x, world_y = [int(x) for x in infile.readline().split()]
+	WORLD_X, WORLD_Y = [int(x) for x in infile.readline().split()]
 	start_point = (start_x, start_y)
 	end_point = (goal_x, goal_y)
 
-	delta_x = goal_x - start_x
-	delta_y = goal_y - start_y
+	set_orientation(start_point, end_point)
 
-	draw_world(world_x, world_y)
+	draw_world(WORLD_X, WORLD_Y)
 	draw_circle(start_x, start_y)
 	draw_circle(goal_x, goal_y)
 
@@ -75,6 +76,16 @@ def read_file(infile):
 		line = infile.readline()
 	object_list.append(vertex_list)
 
+def set_orientation(p_start, p_goal):
+	global ORIENTATION
+
+	delta_x = p_goal[0] - p_start[0]
+	delta_y = p_goal[1] - p_start[1]
+	
+	ORIENTATION = math.degrees(math.atan2(delta_y, delta_x))
+	if ORIENTATION % 90 == 0:
+		ORIENTATION = (ORIENTATION + 1) % 360
+
 def grow_obstacles():
 	global object_list, hull_list
 	#for every object compute hull points
@@ -89,7 +100,7 @@ def grow_obstacles():
 
 def grown_vertices(vertex):
 	'''vertex is a coordinate tuple'''
-	global R_LENGTH, R_WIDTH, ORIENTATION
+	global R_LENGTH, R_WIDTH, ORIENTATION, WORLD_X, WORLD_Y
 	vertices = []
 	theta = ORIENTATION
 	x = vertex[0]
@@ -98,14 +109,23 @@ def grown_vertices(vertex):
 
 	x1 = x + R_LENGTH * math.cos(math.radians(theta))
 	y1 = y + R_LENGTH * math.sin(math.radians(theta))
-	vertices.append((x1,y1))
 	theta = (theta + 90) % 360
 	x2 = x1 + R_WIDTH * math.cos(math.radians(theta))
 	y2 = y1 + R_WIDTH * math.sin(math.radians(theta))
-	vertices.append((x2,y2))
 	theta = (theta + 90) % 360
 	x3 = x2 + R_LENGTH * math.cos(math.radians(theta))
 	y3 = y2 + R_LENGTH * math.sin(math.radians(theta))
+
+	#ensure obstacles do not grow beyond boundaries
+	x1 = 0 if x1 < 0 else WORLD_X if x1 > WORLD_X else x1
+	y1 = 0 if y1 < 0 else WORLD_Y if y1 > WORLD_Y else y1
+	x2 = 0 if x2 < 0 else WORLD_X if x2 > WORLD_X else x2
+	y2 = 0 if y2 < 0 else WORLD_Y if y2 > WORLD_Y else y2
+	x3 = 0 if x3 < 0 else WORLD_X if x3 > WORLD_X else x3
+	y3 = 0 if y3 < 0 else WORLD_Y if y3 > WORLD_Y else y3
+
+	vertices.append((x1,y1))
+	vertices.append((x2,y2))
 	vertices.append((x3,y3))
 	return vertices
 
@@ -118,7 +138,8 @@ def convex_hull(points):
 	#print "Sorted: ", points
 	#print "-----------------------------------------------"
 	#need to compute points on stack
-	return find_hull(points, n)
+	points = find_hull(points, n)
+	return find_hull(points, len(points))
 
 
 def lowest_point(points):
