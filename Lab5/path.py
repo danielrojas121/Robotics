@@ -23,6 +23,8 @@ ORIENTATION = 45
 BIG_NUMBER = 1000
 
 def main():
+	global hull_list
+
 	if len(sys.argv) == 2:
 		filename = sys.argv[1]
 		f = open(filename, 'r')
@@ -32,8 +34,7 @@ def main():
 		draw_objects(hull_list)
 		graph_vertices()
 		graph_edges()
-		#draw_edges()
-
+		draw_edges()
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -41,13 +42,16 @@ def main():
 		sys.exit(1)
 
 def read_file(infile):
-	global start_point, end_point
+	global start_point, end_point, ORIENTATION
 
 	start_x, start_y = [int(x) for x in infile.readline().split()]
 	goal_x, goal_y = [int(x) for x in infile.readline().split()]
 	world_x, world_y = [int(x) for x in infile.readline().split()]
 	start_point = (start_x, start_y)
 	end_point = (goal_x, goal_y)
+
+	delta_x = goal_x - start_x
+	delta_y = goal_y - start_y
 
 	draw_world(world_x, world_y)
 	draw_circle(start_x, start_y)
@@ -133,9 +137,9 @@ def lowest_point(points, length):
 			p = points[i]
 		elif points[i][1] == p[1]:
 			if points[i][0] > p[0]:
-				p = points[i]	
+				p = points[i]   
 		i+=1
-	return p	
+	return p    
 
 #sorts point based on how far they are from point 0
 def sort_polar(points, p, n):
@@ -190,9 +194,13 @@ def find_hull(points, n):
 		p3 = points[i]
 		
 		res = (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
-		if res >= 0:
+		if res > 0:
 			stack.append(p1)
 			stack.append(p2)
+			stack.append(p3)
+			i += 1
+		elif res == 0:
+			stack.append(p1)
 			stack.append(p3)
 			i += 1
 		else:
@@ -201,60 +209,94 @@ def find_hull(points, n):
 
 def graph_vertices():
 	global hull_list, nodes, start_point, end_point
-	i = 0
 	#for every object compute hull points
-	while(i<len(hull_list)):
-		coordinates = hull_list[i]
-		j = 0 
-		while(j<len(coordinates)):
-			nodes.append(coordinates[j])
-			j+=1
-		i+=1
+	for hull in hull_list:
+		del hull[-1] # LAST ELEMENT IN HULL_LIST IS A COPY OF FIRST ELEMENT
+		for coordinate in hull:
+			nodes.append(coordinate)
+
 	nodes.append(start_point)
 	nodes.append(end_point)
 
 def graph_edges():
-	global nodes
+	global nodes, edges
 
-	#p = path.Path(nodes)
-	#print p
-	#print p.contains_points([(5,5), (4,0), (6,0), (10,5), (5,10), (0,5)], radius=0.01)
-	i = 0
-	while(i<len(nodes))
+	for i in range(0, len(nodes) - 1):
+		for j in range(i+1, len(nodes)):
+			edges.append((nodes[i], nodes[j]))
 
+	valid_edges = []
+	for edge in edges:
+		#if count > 1:
+			#break
+		if valid_edge(edge):
+			valid_edges.append(edge)
 
-def intersect(p1, p2, p3, p4):
-	'''intersects stuff'''
-	x2 = p2[0]
-	x1 = p1[0]
-	y2 = p2[1]
-	y1 = p1[1]
+		#count += 1
+
+	edges = valid_edges
+	#print edges
+
+def valid_edge(edge):
+	global hull_list
+
+	for hull in hull_list:
+		if edge[0] in hull:
+			v1_index = hull.index(edge[0])
+			if edge[1] in hull:
+				v2_index = hull.index(edge[1])
+				diff = abs(v2_index - v1_index)
+				if diff > 1 and diff != len(hull) - 1:
+					return False
+		for i in range(0, len(hull)):
+			#special case when last and first vertex connect
+			hull_p1 = hull[i]
+
+			if i == len(hull) - 1:
+				hull_p2 = hull[0]
+			else:
+				hull_p2 = hull[i+1]
+
+			if intersect(edge[0], edge[1], hull_p1, hull_p2):
+				return False
+
+	return True
+
+def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
+	'''take start and end coordinates of a graph path and object edge'''
+	g_x1 = graph_p1[0]
+	g_y1 = graph_p1[1]
+	g_x2 = graph_p2[0]
+	g_y2 = graph_p2[1]
 	#line eqn: Ax + By = C
-	#eqn for edge
-	A1 = y2 - y1
-	B1 = x1 - x2
-	C1 = A1*x1 + B1*y1
-	#eqn for object side line 
-	A2 = p4[1] - p3[1]
-	B2 = p3[0] - p4[0]
-	C2 = A2*p3[0] + B2*p3[1]
+	#eqn for graph path edge
+	A1 = g_y2 - g_y1
+	B1 = g_x1 - g_x2
+	C1 = A1*g_x1 + B1*g_y1
+	#eqn for object side
+	o_x1 = obj_p1[0]
+	o_y1 = obj_p1[1]
+	o_x2 = obj_p2[0]
+	o_y2 = obj_p2[1]
+
+	A2 = o_y2 - o_y1
+	B2 = o_x1 - o_x2
+	C2 = A2*o_x1 + B2*o_y1
 	det = A1*B2 - A2*B1
 	#parallel lines, won't intersect
 	if(det == 0):
-		return None
+		return False
 	else:
 		#intersection point
 		px = (B2*C1 - B1*C2)/det
 		py = (A1*C2 - A2*C1)/det
-		#check if intersection falls on path of movement
-		if (min(x1, x2) < px) and (max(x1, x2) > px):
-			if (min(y1, y2) < py) and (max(y1, y2) > py):
+		#check if intersection falls within path of graph edge
+		if (min(g_x1, g_x2) < px) and (max(g_x1, g_x2) > px):
+			if (min(g_y1, g_y2) < py) and (max(g_y1, g_y2) > py):
 				#check if intersection point falls in obstacle
-				if (min(p1[0], p2[0]) < px) and (max(p1[0], p2[0]) > px):
-					if (min(p1[1], p2[1]) < py) and (max(p1[1], p2[1]) > py):
-						#dist = math.sqrt((px - x1)**2 + (py - y1)**2)
+				if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
+					if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
 						return True
-		#if no intersection just return None
 		return False
 
 def draw_world(x, y):
@@ -300,21 +342,13 @@ def draw_objects(object_list):
 		i+=1
 
 def draw_edges():
-	global nodes, edges, object_list
+	global edges
+	color('blue')
 	penup()
-	for i in range(0, len(nodes) - 1):
-		for j in range(i+1, len(nodes)):
-			for k in range(0, len(object_list)):
-				coordinates = object_list[k]
-				for m in range(0, len(coordinates)):
-					if intersects: 
-
-			setposition(nodes[i][0] * scale + offsetx, nodes[i][1] * scale + offsety)
-			pendown()
-			setposition(nodes[j][0] * scale + offsetx, nodes[j][1] * scale + offsety)
-			penup()
-
-			j += 1
-		i += 1
-
+	for edge in edges:
+		setposition(edge[0][0] * scale + offsetx, edge[0][1] * scale + offsety)
+		pendown()
+		setposition(edge[1][0] * scale + offsetx, edge[1][1] * scale + offsety)
+		penup()
+	
 main()
