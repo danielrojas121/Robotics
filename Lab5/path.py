@@ -17,6 +17,7 @@ object_list = []
 hull_list = []
 nodes = []
 edges = []
+nodes_dict = {}
 start_point = None
 end_point = None
 R_LENGTH = 26
@@ -37,6 +38,15 @@ def main():
 		graph_vertices()
 		graph_edges()
 		draw_edges()
+		path = dijkstra(nodes, nodes_dict, start_point)
+		print "visited:"
+		print "------------------------------------"
+		print path[0]
+		print "------------------------------------"
+		print "path:"
+		print "------------------------------------"
+		print path[1]
+		print "------------------------------------"
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -210,17 +220,20 @@ def find_hull(points, n):
 	return stack
 
 def graph_vertices():
-	global hull_list, nodes, start_point, end_point
+	global hull_list, nodes, start_point, end_point, nodes_dict
 	#for every object compute hull points
 	for hull in hull_list:
 		del hull[-1] # LAST ELEMENT IN HULL_LIST IS A COPY OF FIRST ELEMENT
 		for coordinate in hull:
 			nodes.append(coordinate)
+			nodes_dict[coordinate] = []
 	nodes.append(start_point)
+	nodes_dict[start_point] = []
 	nodes.append(end_point)
+	nodes_dict[end_point] = []
 
 def graph_edges():
-	global nodes, edges
+	global nodes, edges, nodes_dict
 
 	for i in range(0, len(nodes) - 1):
 		for j in range(i+1, len(nodes)):
@@ -230,9 +243,9 @@ def graph_edges():
 	for edge in edges:
 		if valid_edge(edge):
 			valid_edges.append(edge)
-
+			nodes_dict[edge[0]].append(edge[1])
+			nodes_dict[edge[1]].append(edge[0])
 	edges = valid_edges
-	#print edges
 
 def valid_edge(edge):
 	global hull_list
@@ -297,6 +310,39 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
 					if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
 						return True
 		return False
+
+def dijkstra(nodes, nodes_dict, start_node):
+	visited = {start_node: 0}
+	path = {}
+
+	while nodes:
+		min_node = None
+		for node in nodes:
+			if node in visited:
+				if min_node is None:
+					min_node = node
+				elif visited[node] < visited[min_node]:
+					min_node = node
+
+		if min_node is None:
+			break
+
+		nodes.remove(min_node)
+		current_weight = visited[min_node]
+
+		for node in nodes_dict[min_node]:
+			weight = current_weight + edge_distance(min_node, node)
+			if node not in visited or weight < visited[node]:
+				visited[node] = weight
+				path[node] = min_node
+
+	return visited, path
+
+def edge_distance(p1, p2):
+	y = p2[1] - p1[1]
+	x = p2[0] - p1[0]
+	d = math.hypot(x, y)
+	return d
 
 def draw_world(x, y):
 	penup()
