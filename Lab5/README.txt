@@ -16,6 +16,11 @@ Sample coordinates given from lab instructions.
 roborace.txt:
 Coordinates given from the professor for roborace.
 
+Robot Dimensions 
+------------------------------------------------------------------------------
+Size: 26cm x 16cm 
+Virtual Size: R_LENGTH = 26, R_WIDTH = 16 (rectangle)
+Reflection Reference Point: front, left corner (front begins pointing towards 0 degrees and is adjusted to point in the direction of the goal)
 
 Invoking program details
 ------------------------------------------------------------------------------

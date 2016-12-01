@@ -49,7 +49,10 @@ def main():
         graph_edges()
         draw_edges()
         path = find_path(start_point, end_point)
-        draw_path(path)
+        p_list = path[0]
+        p_cost = path[1]
+        draw_path(p_list)
+        print "Optimal path cost:", p_cost
         robot_move(path)
         done()
     else:
@@ -438,6 +441,7 @@ def find_path(start, end):
     path_dict = g[1]
     
     path_list = [end]
+    path_cost = visited[end]
 
     node = end
     while (node != start):
@@ -449,7 +453,7 @@ def find_path(start, end):
             sys.exit(0)
 
     path_list.reverse()
-    return path_list
+    return path_list, path_cost
     
 def draw_world(x, y):
     penup()
