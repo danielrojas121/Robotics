@@ -452,11 +452,12 @@ def find_dist(p1, p2):
 
 def reorient(degrees):
 	'''Convert degrees to encoder counts '''
+	global R_ORIENTATION
 	left = False
 	if(degrees < 0):
-		abs(degrees)
+		degrees = abs(degrees)
 		left = True
-	encoder_count = int(round(degrees/(DEGREE_ENCODER*2), 0))
+	e_count = int(round(degrees/(DEGREE_ENCODER*2), 0))
 	enc_tgt(1, 1, e_count)
 	if left:
 		left_rot()
@@ -467,8 +468,7 @@ def reorient(degrees):
 	R_ORIENTATION = degrees
 
 def robot_move(p_list):
-	#initial orientation
-	reorient(R_ORIENTATION - ORIENTATION)
+	global R_ORIENTATION
 	n = len(p_list)
 	for i in range(n-1):
 		p1 = p_list[i]
@@ -482,8 +482,4 @@ def robot_move(p_list):
 			continue
 
 
-
-
-
-	
 main()
