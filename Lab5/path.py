@@ -21,7 +21,7 @@ edges = []
 nodes_dict = {}
 start_point = None
 end_point = None
-ORIENTATION = 0
+ORIENTATION = 180
 
 BIG_NUMBER = 1000
 
@@ -66,7 +66,7 @@ def read_file(infile):
     start_point = (start_x, start_y)
     end_point = (goal_x, goal_y)
 
-    set_orientation(start_point, end_point)
+    #set_orientation(start_point, end_point)
 
     draw_world(WORLD_X, WORLD_Y)
     draw_circle(start_x, start_y)
@@ -298,13 +298,21 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
     #parallel lines, won't intersect
     if(det == 0):
         return False
-    #special cases for horizontal and vertical object segments
+    #special cases for horizontal and vertical segments
     elif (o_x1 == o_x2):
     	if intersect_vertical_obj(graph_p1, graph_p2, obj_p1, obj_p2):
     		return True
     	return False
     elif (o_y1 == o_y2):
     	if intersect_horizontal_obj(graph_p1, graph_p2, obj_p1, obj_p2):
+    		return True
+    	return False
+    elif (g_x1 == g_x2):
+    	if intersect_vertical_obj(obj_p1, obj_p2, graph_p1, graph_p2):
+    		return True
+    	return False
+    elif (g_y1 == g_y2):
+    	if intersect_horizontal_obj(obj_p1, obj_p2, graph_p1, graph_p2):
     		return True
     	return False
     #all other cases
@@ -320,18 +328,6 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
                 if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
                     if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
                         return True
-            #special case when graph edge is horizontal
-            elif (g_y1 == g_y2 == py):
-                if (min(o_y1, o_y2) < py) and (max(o_y1, o_y2) > py):
-                    if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
-                        return True
-        #special case when graph edge is vertical & intersection on path
-        elif (min(g_y1, g_y2) < py) and (max(g_y1, g_y2) > py):
-            if (g_x1 == g_x2 == px):
-                if (min(o_x1, o_x2) < px) and (max(o_x1, o_x2) > px):
-                    if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
-                        return True
-
         return False
 
 def slope(p1, p2):
