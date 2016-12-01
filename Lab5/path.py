@@ -1,3 +1,4 @@
+from gopigo import *
 from turtle import *
 from operator import itemgetter
 from matplotlib import path
@@ -20,10 +21,19 @@ edges = []
 nodes_dict = {}
 start_point = None
 end_point = None
+ORIENTATION = 45 #CANNOT BE ON THE X=0 OR Y=0 AXIS
+
+BIG_NUMBER = 1000
+
+#Robot settings
+R_ORIENTATION = 0
 R_LENGTH = 26
 R_WIDTH = 16
-ORIENTATION = 45 #CANNOT BE ON THE X=0 OR Y=0 AXIS
-BIG_NUMBER = 1000
+DEGREE_ENCODER = 5.625
+ENCODERS_PER_REV = 18
+DISTANCE_PER_REV = 20.4 
+DISTANCE_PER_ENC = DISTANCE_PER_REV/ENCODERS_PER_REV
+set_speed(100)
 
 def main():
 	global hull_list
@@ -40,6 +50,7 @@ def main():
 		draw_edges()
 		path = find_path(start_point, end_point)
 		draw_path(path)
+		robot_move(path)
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -138,8 +149,6 @@ def convex_hull(points):
 	p = lowest_point(points)
 	#get points sorted in order of angularity
 	points = sort_polar(points, p, n)
-	#print "Sorted: ", points
-	#print "-----------------------------------------------"
 	#need to compute points on stack
 	points = find_hull(points, n)
 	return find_hull(points, len(points))
@@ -432,5 +441,49 @@ def draw_path(path_nodes):
 		pendown()
 
 	penup()
+
+
+def find_dist(p1, p2):
+	y = p2[1] - p1[1]
+	x = p2[0] - p1[0]
+	dist = math.hypot(x, y)
+	theta = math.degrees(math.atan2(y,x))
+	return (dist, theta)
+
+def reorient(degrees):
+	'''Convert degrees to encoder counts '''
+	left = False
+	if(degrees < 0):
+		abs(degrees)
+		left = True
+	encoder_count = int(round(degrees/(DEGREE_ENCODER*2), 0))
+	enc_tgt(1, 1, e_count)
+	if left:
+		left_rot()
+	else:
+		right_rot()
+	while(read_enc_status()):
+		continue
+	R_ORIENTATION = degrees
+
+def robot_move(p_list):
+	#initial orientation
+	reorient(R_ORIENTATION - ORIENTATION)
+	n = len(p_list)
+	for i in range(n-1):
+		p1 = p_list[i]
+		p2 = p_list[i+1]
+		dist = find_dist(p1, p2)
+		reorient(R_ORIENTATION - dist[1])
+		enc_count = int(round(dist[0]/(DISTANCE_PER_ENC), 0))
+		enc_tgt(1,1, enc_count)
+		fwd()
+		while(read_enc_status()):
+			continue
+
+
+
+
+
 	
 main()
