@@ -38,8 +38,8 @@ def main():
 		graph_vertices()
 		graph_edges()
 		draw_edges()
-		g = dijkstra(nodes, nodes_dict, start_point)
-		draw_path(g[1], start_point, end_point)
+		path = find_path(start_point, end_point)
+		draw_path(path)
 		done()
 	else:
 		print "Error: Incorrect command line arguments"
@@ -55,7 +55,7 @@ def read_file(infile):
 	start_point = (start_x, start_y)
 	end_point = (goal_x, goal_y)
 
-	#set_orientation(start_point, end_point)
+	set_orientation(start_point, end_point)
 
 	draw_world(WORLD_X, WORLD_Y)
 	draw_circle(start_x, start_y)
@@ -354,6 +354,21 @@ def edge_distance(p1, p2):
 	d = math.hypot(x, y)
 	return d
 
+def find_path(start, end):
+	g = dijkstra(nodes, nodes_dict, start_point)
+	visited = g[0]
+	path_dict = g[1]
+	
+	path_list = [end]
+
+	node = end
+	while (node != start):
+		node = path_dict[node]
+		path_list.append(node)
+
+	path_list.reverse()
+	return path_list
+	
 def draw_world(x, y):
 	penup()
 	setposition(offsetx, offsety)
@@ -407,18 +422,15 @@ def draw_edges():
 		setposition(edge[1][0] * scale + offsetx, edge[1][1] * scale + offsety)
 		penup()
 
-def draw_path(path, start, end):
+def draw_path(path_nodes):
 	color('green')
 	pensize(2)
-
-	node = end
 	penup()
-	setposition(node[0] * scale + offsetx, node[1] * scale + offsety)
-	pendown()
-	while (node != start):
-		node = path[node]
+
+	for node in path_nodes:
 		setposition(node[0] * scale + offsetx, node[1] * scale + offsety)
-	
+		pendown()
+
 	penup()
 	
 main()
