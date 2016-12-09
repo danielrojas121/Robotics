@@ -1,7 +1,6 @@
 #from gopigo import *
 from turtle import *
-from operator import itemgetter
-from matplotlib import path
+import random
 import matplotlib.pyplot as plt
 import sys
 import math
@@ -14,12 +13,9 @@ offsetx = -scale/2 * 300
 offsety = -scale/2 * 300
 WORLD_X = 600
 WORLD_Y = 600
-nodes = []
-edges = []
-nodes_dict = []
 object_list = []
-start_point = None
-end_point = None
+STEP_SIZE = 5
+N = 10
 
 def main():
 
@@ -29,12 +25,14 @@ def main():
         filename = sys.argv[2]
         goal_file = open(filename, 'r')
         read_obj_file(obj_file)
-        read_goal_file(goal_file)
+        start_point, end_point = read_goal_file(goal_file)
 
         draw_world(WORLD_X, WORLD_Y)
         draw_objects(object_list)
         draw_circle(start_point[0], start_point[1])
         draw_circle(end_point[0], end_point[1])
+
+        build_rrt(start_point, N)
        
         done()
     else:
@@ -61,27 +59,27 @@ def read_obj_file(infile):
     object_list.append(vertex_list)
 
 def read_goal_file(infile):
-    global start_point, end_point
-
     start_x, start_y = [int(x) for x in infile.readline().split()]
     goal_x, goal_y = [int(x) for x in infile.readline().split()]
     start_point = (start_x, start_y)
     end_point = (goal_x, goal_y)
+    return start_point, end_point
 
-def graph_edges():
-    global nodes, edges, nodes_dict
+def build_rrt(q_0, n):
+    nodes = []
+    edges = []
 
-    for i in range(0, len(nodes) - 1):
-        for j in range(i+1, len(nodes)):
-            edges.append((nodes[i], nodes[j]))
+    nodes.append(q_0)
+    for i in range(n):
+        x_rand = random.randint(0, WORLD_X)
+        y_rand = random.randint(0, WORLD_Y)
+        q_rand = (x_rand, y_rand)
+        extend_rrt(nodes, edges, q_rand)
 
-    valid_edges = []
-    for edge in edges:
-        if valid_edge(edge):
-            valid_edges.append(edge)
-            nodes_dict[edge[0]].append(edge[1])
-            nodes_dict[edge[1]].append(edge[0])
-    edges = valid_edges
+    return nodes, edges
+
+def extend_rrt(nodes, edges, q_rand):
+    return q_rand
 
 def valid_edge(edge):
     global object_list
