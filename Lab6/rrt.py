@@ -106,8 +106,16 @@ def step_edge(q_near, q_rand):
     theta = math.degrees(math.atan2(dy, dx))
     if theta < 0:
         theta += 360.0
-    x = q_near[0] + STEP_SIZE*math.cos(theta)
-    y = q_near[1] + STEP_SIZE*math.sin(theta)
+    x = q_near[0] + STEP_SIZE*math.cos(math.radians(theta))
+    y = q_near[1] + STEP_SIZE*math.sin(math.radians(theta))
+    if x < 0 or y < 0:
+        print "STEP_SIZE:", STEP_SIZE
+        print "theta:", theta
+        print "sin:", math.sin(theta)
+        print "q_near:", q_near
+        print "q_rand:", q_rand
+        print "x:", x
+        print "y:", y
     return (q_near, (x,y))
 
 def valid_edge(edge):
@@ -185,8 +193,8 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
         py = abs((A1*C2 - A2*C1)/det)
 
         #check if intersection falls within path of graph edge
-        if (min(g_x1, g_x2) <= px) and (max(g_x1, g_x2) >= px):
-            if (min(g_y1, g_y2) <= py) and (max(g_y1, g_y2) >= py):
+        if (min(g_x1, g_x2) < px) and (max(g_x1, g_x2) > px):
+            if (min(g_y1, g_y2) < py) and (max(g_y1, g_y2) > py):
                 #check if intersection point falls in obstacle
                 if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
                     if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
@@ -219,8 +227,8 @@ def intersect_horizontal_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     if m == None:
         #vertical line segment
         seg_x = segment_p1[0]
-        if (min(obj_p1[0],obj_p2[0])<seg_x) and (max(obj_p1[0],obj_p2[0])>seg_x):
-            if (min(segment_p1[1],segment_p2[1])<obj_y) and (max(segment_p1[1],segment_p2[1])>obj_y):            
+        if (min(obj_p1[0],obj_p2[0])<=seg_x) and (max(obj_p1[0],obj_p2[0])>=seg_x):
+            if (min(segment_p1[1],segment_p2[1])<=obj_y) and (max(segment_p1[1],segment_p2[1])>=obj_y):            
                 return True
         return False
     if m == 0:
@@ -231,8 +239,8 @@ def intersect_horizontal_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     x = (obj_y - b) / m
     y = obj_y
     # check if intersection falls within bounds
-    if (min(obj_p1[0],obj_p2[0])<x) and (max(obj_p1[0],obj_p2[0])>x):
-        if (min(segment_p1[1],segment_p2[1])<y) and (max(segment_p1[1],segment_p2[1])>y):
+    if (min(obj_p1[0],obj_p2[0])<=x) and (max(obj_p1[0],obj_p2[0])>=x):
+        if (min(segment_p1[1],segment_p2[1])<=y) and (max(segment_p1[1],segment_p2[1])>=y):
             return True
     return False
 
@@ -247,8 +255,8 @@ def intersect_vertical_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     if m == 0:
         #horizontal line segment
         seg_y = segment_p1[1]
-        if (min(obj_p1[1],obj_p2[1])<seg_y) and (max(obj_p1[1],obj_p2[1])>seg_y):
-            if (min(segment_p1[0],segment_p2[0])<obj_x) and (max(segment_p1[0],segment_p2[0])>obj_x):            
+        if (min(obj_p1[1],obj_p2[1])<=seg_y) and (max(obj_p1[1],obj_p2[1])>=seg_y):
+            if (min(segment_p1[0],segment_p2[0])<=obj_x) and (max(segment_p1[0],segment_p2[0])>=obj_x):            
                 return True
         return False
 
@@ -257,8 +265,8 @@ def intersect_vertical_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     y = m * obj_x + b
     x = obj_x
     # check if intersection falls within bounds
-    if (min(obj_p1[1],obj_p2[1])<y) and (max(obj_p1[1],obj_p2[1])>y):
-        if (min(segment_p1[0],segment_p2[0])<x) and (max(segment_p1[0],segment_p2[0])>x):
+    if (min(obj_p1[1],obj_p2[1])<=y) and (max(obj_p1[1],obj_p2[1])>=y):
+        if (min(segment_p1[0],segment_p2[0])<=x) and (max(segment_p1[0],segment_p2[0])>=x):
             return True
     return False
 
