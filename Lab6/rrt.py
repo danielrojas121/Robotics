@@ -14,8 +14,8 @@ offsety = -scale/2 * 300
 WORLD_X = 600
 WORLD_Y = 600
 object_list = []
-STEP_SIZE = 5
-N = 10
+STEP_SIZE = 25
+N = 2000
 
 def main():
 
@@ -27,12 +27,13 @@ def main():
         read_obj_file(obj_file)
         start_point, end_point = read_goal_file(goal_file)
 
+        tree = build_rrt(start_point, N) #tree is tuple
+
         draw_world(WORLD_X, WORLD_Y)
         draw_objects(object_list)
         draw_circle(start_point[0], start_point[1])
         draw_circle(end_point[0], end_point[1])
-
-        build_rrt(start_point, N)
+        draw_edges(tree[1])
        
         done()
     else:
@@ -74,12 +75,40 @@ def build_rrt(q_0, n):
         x_rand = random.randint(0, WORLD_X)
         y_rand = random.randint(0, WORLD_Y)
         q_rand = (x_rand, y_rand)
-        extend_rrt(nodes, edges, q_rand)
+        
+        edge = extend_rrt(nodes, edges, q_rand)
+        if edge != None:
+            nodes.append(edge[1]) #the second node is the new node
+            edges.append(edge)
 
-    return nodes, edges
+    return (nodes, edges) #return Tree of nodes and edges
 
 def extend_rrt(nodes, edges, q_rand):
-    return q_rand
+    shortest_dist = 10000
+    q_near = None
+    for node in nodes:
+        dist = edge_distance(node, q_rand)
+        if dist < shortest_dist:
+            q_near = node
+            shortest_dist = dist
+
+    new_edge = step_edge(q_near, q_rand)
+    if valid_edge(new_edge):
+        return new_edge
+
+    return None
+
+def step_edge(q_near, q_rand):
+    if edge_distance(q_near, q_rand) <= STEP_SIZE:
+        return (q_near, q_rand)
+    dy = q_rand[1] - q_near[1]
+    dx = q_rand[0] - q_near[0]
+    theta = math.degrees(math.atan2(dy, dx))
+    if theta < 0:
+        theta += 360.0
+    x = q_near[0] + STEP_SIZE*math.cos(theta)
+    y = q_near[1] + STEP_SIZE*math.sin(theta)
+    return (q_near, (x,y))
 
 def valid_edge(edge):
     global object_list
@@ -156,8 +185,8 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
         py = abs((A1*C2 - A2*C1)/det)
 
         #check if intersection falls within path of graph edge
-        if (min(g_x1, g_x2) < px) and (max(g_x1, g_x2) > px):
-            if (min(g_y1, g_y2) < py) and (max(g_y1, g_y2) > py):
+        if (min(g_x1, g_x2) <= px) and (max(g_x1, g_x2) >= px):
+            if (min(g_y1, g_y2) <= py) and (max(g_y1, g_y2) >= py):
                 #check if intersection point falls in obstacle
                 if (min(o_x1, o_x2) <= px) and (max(o_x1, o_x2) >= px):
                     if (min(o_y1, o_y2) <= py) and (max(o_y1, o_y2) >= py):
@@ -280,7 +309,7 @@ def draw_objects(object_list):
         penup()
         i+=1
 
-def draw_edges():
+def draw_edges(edges):
     color('blue')
     penup()
     for edge in edges:
