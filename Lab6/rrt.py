@@ -123,13 +123,8 @@ def valid_edge(edge):
 
     for obj in object_list:
         #special case when edge lies within an obstacle
-        if edge[0] in obj:
-            v1_index = obj.index(edge[0])
-            if edge[1] in obj:
-                v2_index = obj.index(edge[1])
-                diff = abs(v2_index - v1_index)
-                if diff > 1 and diff != len(obj) - 1:
-                    return False
+        if edge[0] in obj and edge[1] in obj:
+            return False
 
         for i in range(0, len(obj)):
             obj_p1 = obj[i]
@@ -216,7 +211,7 @@ def intercept(slope, point):
     if slope == None:
         return None
     elif slope == 0:
-        return 0.0
+        return y
     return y - slope * x
 
 def intersect_horizontal_obj(segment_p1, segment_p2, obj_p1, obj_p2):
@@ -233,6 +228,10 @@ def intersect_horizontal_obj(segment_p1, segment_p2, obj_p1, obj_p2):
         return False
     if m == 0:
         #parallel lines
+        if obj_y == segment_p1[1]:
+            if ((min(obj_p1[0],obj_p2[0])<=segment_p1[0]) and (max(obj_p1[0],obj_p2[0])>=segment_p1[0]) or
+                (min(obj_p1[0],obj_p2[0])<=segment_p2[0]) and (max(obj_p1[0],obj_p2[0])>=segment_p2[0])):
+                return True
         return False
     b = intercept(m, segment_p1)
     # calculate intersection
@@ -251,6 +250,10 @@ def intersect_vertical_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     m = slope(segment_p1, segment_p2)
     if m == None:
         #parallel lines
+        if obj_x == segment_p1[0]:
+            if ((min(obj_p1[1],obj_p2[1])<=segment_p1[1]) and (max(obj_p1[1],obj_p2[1])>=segment_p1[1]) or
+                (min(obj_p1[1],obj_p2[1])<=segment_p2[1]) and (max(obj_p1[1],obj_p2[1])>=segment_p2[1])):
+                return True
         return False
     if m == 0:
         #horizontal line segment
