@@ -26,9 +26,7 @@ def main():
         goal_file = open(filename, 'r')
         read_obj_file(obj_file)
         start_point, end_point = read_goal_file(goal_file)
-
-        tree = build_rrt(start_point, N) #tree is tuple
-
+        tree = build_rrt(start_point, N) #tree is a tuple of nodes & edges
         draw_world(WORLD_X, WORLD_Y)
         draw_objects(object_list)
         draw_circle(start_point[0], start_point[1])
@@ -108,15 +106,8 @@ def step_edge(q_near, q_rand):
         theta += 360.0
     x = q_near[0] + STEP_SIZE*math.cos(math.radians(theta))
     y = q_near[1] + STEP_SIZE*math.sin(math.radians(theta))
-    if x < 0 or y < 0:
-        print "STEP_SIZE:", STEP_SIZE
-        print "theta:", theta
-        print "sin:", math.sin(theta)
-        print "q_near:", q_near
-        print "q_rand:", q_rand
-        print "x:", x
-        print "y:", y
-    return (q_near, (x,y))
+    q_new = (x,y)
+    return (q_near, q_new)
 
 def valid_edge(edge):
     global object_list
@@ -126,7 +117,7 @@ def valid_edge(edge):
         if edge[0] in obj and edge[1] in obj:
             return False
 
-        for i in range(0, len(obj)):
+        for i in range(len(obj)):
             obj_p1 = obj[i]
             #special case when last and first vertex connect
             if i == len(obj) - 1:
@@ -161,11 +152,8 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
     C2 = A2*o_x1 + B2*o_y1
     
     det = A1*B2 - A2*B1
-    #parallel lines, won't intersect
-    if(det == 0):
-        return False
     #special cases for horizontal and vertical segments
-    elif (o_x1 == o_x2):
+    if (o_x1 == o_x2):
     	if intersect_vertical_obj(graph_p1, graph_p2, obj_p1, obj_p2):
     		return True
     	return False
@@ -181,12 +169,14 @@ def intersect(graph_p1, graph_p2, obj_p1, obj_p2):
     	if intersect_horizontal_obj(obj_p1, obj_p2, graph_p1, graph_p2):
     		return True
     	return False
+    #parallel lines, won't intersect
+    elif (det == 0):
+        return False
     #all other cases
     else:
         #intersection point
         px = abs((B2*C1 - B1*C2)/det)
         py = abs((A1*C2 - A2*C1)/det)
-
         #check if intersection falls within path of graph edge
         if (min(g_x1, g_x2) < px) and (max(g_x1, g_x2) > px):
             if (min(g_y1, g_y2) < py) and (max(g_y1, g_y2) > py):
@@ -202,7 +192,7 @@ def slope(p1, p2):
 
     if dx == 0:
         return None
-    return dy/dx
+    return float(dy/dx)
 
 def intercept(slope, point):
     y = point[1]
@@ -210,9 +200,9 @@ def intercept(slope, point):
 
     if slope == None:
         return None
-    elif slope == 0:
+    elif slope == 0.0:
         return y
-    return y - slope * x
+    return y - (slope * x)
 
 def intersect_horizontal_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     #get y of horizontal object
@@ -237,9 +227,17 @@ def intersect_horizontal_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     # calculate intersection
     x = (obj_y - b) / m
     y = obj_y
+
     # check if intersection falls within bounds
-    if (min(obj_p1[0],obj_p2[0])<=x) and (max(obj_p1[0],obj_p2[0])>=x):
-        if (min(segment_p1[1],segment_p2[1])<=y) and (max(segment_p1[1],segment_p2[1])>=y):
+    if (min(obj_p1[0],obj_p2[0])<x) and (max(obj_p1[0],obj_p2[0])>x):
+        if (min(segment_p1[1],segment_p2[1])<y) and (max(segment_p1[1],segment_p2[1])>y):
+            return True
+        elif segment_p1[1] == y or segment_p2[1] == y:
+            return True
+    elif obj_p1[0] == x or obj_p2[0] == x:
+        if (min(segment_p1[1],segment_p2[1])<y) and (max(segment_p1[1],segment_p2[1])>y):
+            return True
+        elif segment_p1[1] == y or segment_p2[1] == y:
             return True
     return False
 
@@ -268,8 +266,15 @@ def intersect_vertical_obj(segment_p1, segment_p2, obj_p1, obj_p2):
     y = m * obj_x + b
     x = obj_x
     # check if intersection falls within bounds
-    if (min(obj_p1[1],obj_p2[1])<=y) and (max(obj_p1[1],obj_p2[1])>=y):
-        if (min(segment_p1[0],segment_p2[0])<=x) and (max(segment_p1[0],segment_p2[0])>=x):
+    if (min(obj_p1[1],obj_p2[1])<y) and (max(obj_p1[1],obj_p2[1])>y):
+        if (min(segment_p1[0],segment_p2[0])<x) and (max(segment_p1[0],segment_p2[0])>x):
+            return True
+        elif segment_p1[0] == x or segment_p2[0] == x:
+            return True
+    elif (obj_p1[1] == y or obj_p2[1] == y):
+        if (min(segment_p1[0],segment_p2[0])<x) and (max(segment_p1[0],segment_p2[0])>x):
+            return True
+        elif segment_p1[0] == x or segment_p2[0] == x:
             return True
     return False
 
