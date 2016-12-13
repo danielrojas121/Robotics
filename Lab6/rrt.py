@@ -1,4 +1,3 @@
-#from gopigo import *
 from turtle import *
 import random
 import matplotlib.pyplot as plt
@@ -15,7 +14,8 @@ WORLD_X = 600
 WORLD_Y = 600
 object_list = []
 STEP_SIZE = 25
-N = 2000
+N = 3000
+connected = False
 
 def main():
 
@@ -26,17 +26,20 @@ def main():
         goal_file = open(filename, 'r')
         read_obj_file(obj_file)
         start_point, end_point = read_goal_file(goal_file)
-        tree = build_rrt(start_point, N) #tree is a tuple of nodes & edges
+        tree = build_rrt(start_point, N, end_point) #tree is a tuple of nodes & edges
         draw_world(WORLD_X, WORLD_Y)
         draw_objects(object_list)
         draw_circle(start_point[0], start_point[1])
         draw_circle(end_point[0], end_point[1])
         draw_edges(tree[1])
-       
+        if connected:
+            nodes_dict = build_dict(tree)
+            path = find_path(start_point, end_point, tree[0], nodes_dict)
+            draw_path(path[0])
         done()
     else:
         print "Error: Incorrect command line arguments"
-        print "Format: python rrt.py <obstacle_filename> <goal_filename>"
+        print "Format: python part1.py <obstacle_filename> <goal_filename>"
         sys.exit(1)
 
 def read_obj_file(infile):
@@ -64,7 +67,8 @@ def read_goal_file(infile):
     end_point = (goal_x, goal_y)
     return start_point, end_point
 
-def build_rrt(q_0, n):
+def build_rrt(q_0, n, end_point):
+    global connected
     nodes = []
     edges = []
 
@@ -74,10 +78,16 @@ def build_rrt(q_0, n):
         y_rand = random.randint(0, WORLD_Y)
         q_rand = (x_rand, y_rand)
         
+        if i % (n/20) == 0:
+            q_rand = end_point
+        
         edge = extend_rrt(nodes, edges, q_rand)
         if edge != None:
             nodes.append(edge[1]) #the second node is the new node
             edges.append(edge)
+            if edge[1] == end_point:
+                connected = True
+                break
 
     return (nodes, edges) #return Tree of nodes and edges
 
@@ -277,6 +287,67 @@ def intersect_vertical_obj(segment_p1, segment_p2, obj_p1, obj_p2):
         elif segment_p1[0] == x or segment_p2[0] == x:
             return True
     return False
+
+def build_dict(tree):
+    nodes = tree[0]
+    edges = tree[1]
+    nodes_dict = {}
+    
+    for node in nodes:
+        nodes_dict[node] = []
+
+    for edge in edges:
+        nodes_dict[edge[0]].append(edge[1])
+        nodes_dict[edge[1]].append(edge[0])
+
+    return nodes_dict
+
+def find_path(start, end, nodes, nodes_dict):
+    g = dijkstra(nodes, nodes_dict, start)
+    visited = g[0]
+    path_dict = g[1]
+    
+    path_list = [end]
+    path_cost = visited[end]
+
+    node = end
+    while (node != start):
+        if node in path_dict:
+            node = path_dict[node]
+            path_list.append(node)
+        else:
+            print "No path exists between these two points"
+            sys.exit(0)
+
+    path_list.reverse()
+    return path_list, path_cost
+
+def dijkstra(nodes, nodes_dict, start_node):
+    visited = {start_node: 0}
+    path = {}
+
+    while nodes:
+        min_node = None
+        for node in nodes:
+            if node in visited:
+                if min_node is None:
+                    min_node = node
+                elif visited[node] < visited[min_node]:
+                    min_node = node
+
+        if min_node is None:
+            break
+
+        nodes.remove(min_node)
+        current_weight = visited[min_node]
+
+        for node in nodes_dict[min_node]:
+            weight = current_weight + edge_distance(min_node, node)
+            if node not in visited or weight < visited[node]:
+                visited[node] = weight
+                path[node] = min_node
+
+    return visited, path
 
 def edge_distance(p1, p2):
     y = p2[1] - p1[1]
