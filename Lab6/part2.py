@@ -26,13 +26,17 @@ def main():
         goal_file = open(filename, 'r')
         read_obj_file(obj_file)
         start_point, end_point = read_goal_file(goal_file)
-        tree = build_rrt(start_point, N, end_point) #tree is a tuple of nodes & edges
+        tree1, tree2 = build_rrt(start_point, N, end_point) #tree is a tuple of nodes & edges
         draw_world(WORLD_X, WORLD_Y)
         draw_objects(object_list)
         draw_circle(start_point[0], start_point[1])
         draw_circle(end_point[0], end_point[1])
-        draw_edges(tree[1])
+        color('blue')
+        draw_edges(tree1[1])
+        color('red')
+        draw_edges(tree2[1])
         if connected:
+            tree = join_trees(tree1, tree2)
             nodes_dict = build_dict(tree)
             path = find_path(start_point, end_point, tree[0], nodes_dict)
             draw_path(path[0])
@@ -71,25 +75,51 @@ def build_rrt(q_0, n, end_point):
     global connected
     nodes = []
     edges = []
+    nodes2 = []
+    edges2 = []
+    tree1 = True;
 
     nodes.append(q_0)
+    nodes2.append(end_point)
     for i in range(n):
         x_rand = random.randint(0, WORLD_X)
         y_rand = random.randint(0, WORLD_Y)
         q_rand = (x_rand, y_rand)
         
-        if i % (n/20) == 0:
-            q_rand = end_point
-        
-        edge = extend_rrt(nodes, edges, q_rand)
-        if edge != None:
-            nodes.append(edge[1]) #the second node is the new node
-            edges.append(edge)
-            if edge[1] == end_point:
-                connected = True
-                break
+        if(tree1):
+            edge = extend_rrt(nodes, edges, q_rand)
+            if edge != None:
+                nodes.append(edge[1]) #the second node is the new node
+                edges.append(edge)
+                tree1 = not tree1
+                if edge[1] == nodes2[-1]:
+                    connected = True
+                    break
+                edge2 = extend_rrt(nodes2, edges2, edge[1])
+                if edge2 != None:
+                    nodes2.append(edge2[1]) #the second node is the new node
+                    edges2.append(edge2)
+                    if edge2[1] == edge[1]:
+                        connected = True
+                        break
 
-    return (nodes, edges) #return Tree of nodes and edges
+        else:
+            edge = extend_rrt(nodes2, edges2, q_rand)
+            if edge != None:
+                nodes2.append(edge[1]) #the second node is the new node
+                edges2.append(edge)
+                tree1 = not tree1
+                if edge[1] == nodes[-1]:
+                    connected = True
+                    break
+                edge2 = extend_rrt(nodes, edges, edge[1])
+                if edge2 != None:
+                    nodes.append(edge2[1]) #the second node is the new node
+                    edges.append(edge2)
+                    if edge2[1] == edge[1]:
+                        connected = True
+                        break
+    return (nodes, edges), (nodes2, edges2) #return Tree of nodes and edges
 
 def extend_rrt(nodes, edges, q_rand):
     shortest_dist = 10000
@@ -288,6 +318,13 @@ def intersect_vertical_obj(segment_p1, segment_p2, obj_p1, obj_p2):
             return True
     return False
 
+def join_trees(tree1, tree2):
+    del tree2[0][-1]
+    nodes = tree1[0] + tree2[0]
+    edges = tree1[1] + tree2[1]
+    return (nodes, edges)
+
+
 def build_dict(tree):
     nodes = tree[0]
     edges = tree[1]
@@ -397,7 +434,6 @@ def draw_objects(object_list):
         i+=1
 
 def draw_edges(edges):
-    color('blue')
     penup()
     for edge in edges:
         setposition(edge[0][0] * scale + offsetx, edge[0][1] * scale + offsety)
